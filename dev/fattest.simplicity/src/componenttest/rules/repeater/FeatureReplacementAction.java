@@ -14,6 +14,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -117,6 +118,34 @@ public class FeatureReplacementAction implements RepeatTestAction {
      */
     public FeatureReplacementAction(String addFeature) {
         addFeature(addFeature);
+    }
+
+    /**
+     * Add a single feature, and remove all other versions of the feature. It will do nothing if the correct feature is already installed.
+     *
+     * This code assumes that all Liberty features are in the format featureName-x.y
+     *
+     * @param addFeature the feature to add, including the version number.
+     * @param minVersion the lowest version of the feature available within Liberty. This variable is inclusive.
+     * @param maxVersion the highest version of the feature available within Liberty. This variable is inclusive.
+     */
+    public FeatureReplacementAction(String addFeature, String minVersion, String maxVersion) {
+        addFeature(addFeature);
+        removeFeatures(compileRemoveFeatureListFromRange(addFeature, minVersion, maxVersion));
+        this.forceAddFeatures = false;
+    }
+
+    /**
+     * Add a single feature, and remove all other versions of the feature. It will do nothing if the correct feature is already installed.
+     *
+     * @param addFeature the feature to add, including the version number. 
+     * @param minVersion the lowest version of the feature available within Liberty. This variable is inclusive. As this is converted to a string be sure to set the scale appropriately.
+     * @param maxVersion the highest version of the feature available within Liberty. This variable is inclusive. As this is converted to a string be sure to set the scale appropriately.
+     */
+    public FeatureReplacementAction(String addFeature, BigDecimal minVersion, BigDecimal maxVersion) {
+        addFeature(addFeature);
+        removeFeatures(compileRemoveFeatureListFromRange(addFeature, minVersion, maxVersion));
+        this.forceAddFeatures = false;
     }
 
     /**
@@ -360,6 +389,31 @@ public class FeatureReplacementAction implements RepeatTestAction {
             }
         }
         return set;
+    }
+
+
+    private Set<String> compileRemoveFeatureListFromRange(String targetVersion, String minVersion, String maxVersion){
+        BigDecimal dMin = new BigDecimal(minVersion);
+        dMin.setScale(1, BigDecimal.ROUND_HALF_UP);
+        BigDecimal dMax = new BigDecimal(maxVersion);
+        dMax.setScale(1, BigDecimal.ROUND_HALF_UP);
+        return compileRemoveFeatureListFromRange(targetVersion, minVersion, maxVersion);
+    }
+
+    private Set<String> compileRemoveFeatureListFromRange(String targetVersion, BigDecimal minVersion, BigDecimal maxVersion){
+        Set removeFeatures = new HashSet<String>();
+
+        BigDecimal pointOne = new BigDecimal("0.1");
+        String featurePrefix = targetVersion.split("-")[0] + "-";
+        while (minVersion.compareTo(maxVersion) != 1) {
+            String removeFeature = featurePrefix + minVersion;
+            if (! removeFeature.equals(targetVersion)) {
+                removeFeatures.add(removeFeature);
+            }
+            minVersion = minVersion.add(pointOne);
+        }
+
+        return removeFeatures;
     }
 
     @Override

@@ -60,7 +60,7 @@
             <artifactId>microprofile-rest-client-tck</artifactId>
             <version>${microprofile.rest.client.version}</version>
             <scope>system</scope>
-            <systemPath>${basedir}/../../servers/FATServer/microprofile-rest-client-tck-1.0.1.jar</systemPath>
+            <systemPath>${basedir}/../../servers/FATServer/microprofile-rest-client-tck-1.2-SNAPSHOT.jar</systemPath>
         </dependency>
 
         <dependency>

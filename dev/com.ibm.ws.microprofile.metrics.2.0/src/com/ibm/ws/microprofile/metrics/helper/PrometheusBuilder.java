@@ -60,12 +60,11 @@ public class PrometheusBuilder {
     }
 
     public static void buildCounter(StringBuilder builder, String name, Counter counter, String description, String tags) {
-        String lineName = name;
-        if (!name.endsWith("_total")) {
-            lineName += "_total";
-        } else if (!name.endsWith("_")) {
-            lineName += "total";
-        }
+        /*
+         * As per the microprofile metric specification for prometheus output
+         * if the metric name already ends with "_total" do nothing.
+         */
+        String lineName = (!name.endsWith("_total")) ? name + "_total" : name;
 
         getPromTypeLine(builder, lineName, "counter");
         getPromHelpLine(builder, lineName, description);
@@ -73,34 +72,20 @@ public class PrometheusBuilder {
     }
 
     public static void buildConcurrentGauge(StringBuilder builder, String name, ConcurrentGauge counter, String description, String tags) {
-        String lineName = name;
-        if (!name.endsWith("_current")) {
-            lineName += "_current";
-        } else if (!name.endsWith("_")) {
-            lineName += "total";
-        }
+        String lineName = name + "_current";
 
         getPromTypeLine(builder, lineName, "gauge");
         getPromHelpLine(builder, lineName, description);
         getPromValueLine(builder, lineName, counter.getCount(), tags);
 
-        lineName = name;
-        if (!name.endsWith("_min")) {
-            lineName += "_min";
-        } else if (!name.endsWith("_")) {
-            lineName += "_min";
-        }
+        lineName = name + "_min";
 
         getPromTypeLine(builder, lineName, "gauge");
         getPromHelpLine(builder, lineName, description);
         getPromValueLine(builder, lineName, counter.getMin(), tags);
 
-        lineName = name;
-        if (!name.endsWith("_max")) {
-            lineName += "_max";
-        } else if (!name.endsWith("_")) {
-            lineName += "_max";
-        }
+        lineName = name + "_max";
+
         getPromTypeLine(builder, lineName, "gauge");
         getPromHelpLine(builder, lineName, description);
         getPromValueLine(builder, lineName, counter.getMax(), tags);

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
@@ -94,35 +93,33 @@ public class JSONMetricWriter implements OutputWriter {
         //For each Metric that was returned
         for (Entry<MetricID, Metric> entry : metricMap.entrySet()) {
             MetricID metricID = entry.getKey();
-            TreeMap<String, String> alphabeticalMap = new TreeMap<String, String>(metricID.getTags());
-            String tags = "";
-
+            Map<String, String> tagsMap = metricID.getTags();
             String metricName = metricID.getName();
             String metricNameWithTags = metricName;
+            String tags = "";
 
-            if (alphabeticalMap.size() != 0) {
-                for (Entry<String, String> metricsMap : alphabeticalMap.entrySet()) {
-                    String value = metricsMap.getValue();
-                    if (value.contains(";")) {
-                        value = value.replaceAll(";", "_");
+            if (tagsMap.size() != 0) {
+                for (Entry<String, String> tagsMapEntrySet : tagsMap.entrySet()) {
+                    String tagValue = tagsMapEntrySet.getValue();
+
+                    /*
+                     * As per MicroProfile metrics spec
+                     * Need to convert semicolons found in the value of tags
+                     * to underscores
+                     */
+                    if (tagValue.contains(";")) {
+                        tagValue = tagValue.replaceAll(";", "_");
                     }
-                    tags += ";" + metricsMap.getKey() + "=" + value;
-                }
 
-                //tags = ";" + alphabeticalMap.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(";"));
+                    tags += ";" + tagsMapEntrySet.getKey() + "=" + tagValue;
+                }
                 metricNameWithTags = metricName + tags;
             }
             Metric metric = entry.getValue();
 
-            //Problem after this was that for each tagged MetricA , the "put" would overwrite the previous value.
-
             if (Counter.class.isInstance(metric)) {
                 jsonObject.put(metricNameWithTags, ((Counter) metric).getCount());
             } else if (ConcurrentGauge.class.isInstance(metric)) {
-//old code that lists the cg resources separately
-//                jsonObject.put(metricNameWithTags, ((ConcurrentGauge) metric).getCount());
-//                jsonObject.put(metricName + "_min" + tags, ((ConcurrentGauge) metric).getMin());
-//                jsonObject.put(metricName + "_max" + tags, ((ConcurrentGauge) metric).getMax());
                 jsonObject.put(metricName, getJsonFromMap(Util.getConcurrentGaugeNumbers((ConcurrentGauge) metric, tags), metricName, jsonObject));
             } else if (Gauge.class.isInstance(metric)) {
                 try {

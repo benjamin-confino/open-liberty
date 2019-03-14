@@ -117,7 +117,6 @@ public class BaseMetrics {
         for (String gcName : gcObjectNames) {
 
             String gcNameNoSpace = removeSpaces(gcName);
-
             Tag gcNameNoSpaceTag = new Tag("name", gcNameNoSpace);
             String nameToRegister = "gc.count";
             registry.register(Metadata.builder().withName(nameToRegister).withDisplayName("Garbage Collection Count").withDescription("garbageCollectionCount.description").withType(MetricType.COUNTER).withUnit(MetricUnits.NONE).build(),

@@ -68,7 +68,10 @@ import org.eclipse.microprofile.config.ConfigProvider;
  */
 public class MetricID implements Comparable<MetricID> {
 
-    public static final String GLOBAL_TAGS_VARIABLE = "mp.metrics.tags";//"MP_METRICS_TAGS";
+    public static final String GLOBAL_TAGS_VARIABLE = "mp.metrics.tags";
+
+    public static final String APPLICATION_NAME_VARIABLE = "mp.metrics.appName";
+    public static final String APPLICATION_NAME_TAG = "_app";
 
     private static final String GLOBAL_TAG_MALFORMED_EXCEPTION = "Malformed list of Global Tags. Tag names "
                                                                  + "must match the following regex [a-zA-Z_][a-zA-Z0-9_]*."
@@ -114,8 +117,22 @@ public class MetricID implements Comparable<MetricID> {
         this.name = name;
         Optional<String> globalTags = ConfigProvider.getConfig().getOptionalValue(GLOBAL_TAGS_VARIABLE, String.class);
         globalTags.ifPresent(this::parseGlobalTags);
-        //String globalTagsFromEnv = System.getenv(GLOBAL_TAGS_VARIABLE);
-        //parseGlobalTags(globalTagsFromEnv);
+
+        // for application servers with multiple applications deployed, distinguish metrics from different applications by adding the "_app" tag
+        System.out.println("MetricID " + Thread.currentThread().getContextClassLoader().toString());
+        Optional<String> applicationName = ConfigProvider.getConfig().getOptionalValue(APPLICATION_NAME_VARIABLE, String.class);
+
+        if (applicationName.isPresent()) {
+            System.out.println(ConfigProvider.getConfig());
+            System.out.println("Metric Id --- > " + applicationName);
+        }
+
+        applicationName.ifPresent(appName -> {
+            if (!appName.isEmpty()) {
+                addTag(new Tag(APPLICATION_NAME_TAG, appName));
+            }
+        });
+
         addTags(tags);
     }
 

@@ -226,16 +226,13 @@ public class MetricRegistryImpl extends MetricRegistry {
             //Continue if there is no global tags
         }
         MetricID MetricID = new MetricID(metadata.getName(), tags); //test
-        //MetricID MetricID = new MetricID(metadata.getName(), cumulativeTags.toArray(new Tag[0]));
 
         Class<T> metricClass = determineMetricClass(metric);
         validateMetricNameToSingleType(MetricID.getName(), metricClass);
-        //System.out.println("\ngoing to add this class: " + metricClass.getName());
-        //System.out.println("name: " + MetricID.getName() + "\n tags:" + MetricID.getTagsAsString() + "\n hash: " + MetricID.hashCode());
 
         final Metric existingMID = metricsMID.putIfAbsent(MetricID, metric);
 
-        //shouldn't this go after the throw...
+        //shouldn't this go after the throw... [chdavid]
         this.metadataMID.putIfAbsent(metadata.getName(), metadataBuilder.build());
 
         if (existingMID != null) {

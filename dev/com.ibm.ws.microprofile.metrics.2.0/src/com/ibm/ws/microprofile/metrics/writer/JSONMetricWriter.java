@@ -140,7 +140,10 @@ public class JSONMetricWriter implements OutputWriter {
         return jsonObject;
     }
 
-    private JSONObject getJsonFromMap(Map<String, Number> map, String metricName, JSONObject parentJSONObject) {
+    /*
+     * After retrieving a map of metrics from the registry
+     */
+    private JSONObject getJsonFromMap(Map<String, Number> metricMap, String metricName, JSONObject parentJSONObject) {
 
         /*
          * Check if parent JsonObject has this "metric" already set in it.
@@ -154,7 +157,7 @@ public class JSONMetricWriter implements OutputWriter {
         }
 
         //map already contains "keys" with the "tags"
-        for (Entry<String, Number> entry : map.entrySet()) {
+        for (Entry<String, Number> entry : metricMap.entrySet()) {
             jsonObject.put(entry.getKey(), entry.getValue());
         }
         return jsonObject;

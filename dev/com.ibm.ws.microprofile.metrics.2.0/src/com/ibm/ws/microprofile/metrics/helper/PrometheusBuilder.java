@@ -259,10 +259,10 @@ public class PrometheusBuilder {
      * Create the Prometheus metric name by sanitizing some characters
      */
     private static String getPrometheusMetricName(String name) {
-
+        String out = name;
         //removes undercores
-        String out = name.replaceAll("(?<!^|:)(\\p{Upper})(?=\\p{Lower})", "_$1");
-        out = out.replaceAll("(?<=\\p{Lower})(\\p{Upper})", "_$1").toLowerCase();
+        //String out = name.replaceAll("(?<!^|:)(\\p{Upper})(?=\\p{Lower})", "_$1");
+        //out = out.replaceAll("(?<=\\p{Lower})(\\p{Upper})", "_$1").toLowerCase();
 
         //Change other special characters to underscore
         out = out.replaceAll("[-+_.!?@#$%^&*`'\\s]+", "_");

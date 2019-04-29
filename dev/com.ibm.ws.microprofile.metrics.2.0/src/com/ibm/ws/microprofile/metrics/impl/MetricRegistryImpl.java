@@ -58,6 +58,7 @@ import org.eclipse.microprofile.metrics.Tag;
 import org.eclipse.microprofile.metrics.Timer;
 
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
+import com.ibm.ws.threadContext.ComponentMetaDataAccessorImpl;
 
 /**
  * A registry of metric instances.
@@ -275,6 +276,15 @@ public class MetricRegistryImpl extends MetricRegistry {
         }
     }
 
+    public void unRegisterApplicationMetricsMetricID(String appName) {
+        ConcurrentLinkedQueue<String> list = applicationMap.remove(appName);
+        if (list != null) {
+            for (String metricName : list) {
+                remove(metricName);
+            }
+        }
+    }
+
     private String getApplicationName() {
         com.ibm.ws.runtime.metadata.ComponentMetaData metaData = com.ibm.ws.threadContext.ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData();
         if (metaData != null) {
@@ -284,6 +294,17 @@ public class MetricRegistryImpl extends MetricRegistry {
             }
         }
         return null;
+    }
+
+    private String getApplicationNamev2() {
+        String appName = null;
+        try {
+            ComponentMetaDataAccessorImpl cmdai = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor();
+            appName = cmdai.getComponentMetaData().getModuleMetaData().getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return appName;
     }
 
     /**

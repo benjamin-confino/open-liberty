@@ -17,8 +17,10 @@ import java.util.Set;
 import javax.management.MBeanServer;
 
 import org.eclipse.microprofile.metrics.Metadata;
+import org.eclipse.microprofile.metrics.MetricID;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricType;
+import org.eclipse.microprofile.metrics.Tag;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
@@ -31,12 +33,13 @@ public class MonitorMetrics {
 	protected String objectName;
 	private String mbeanStatsName;
 	private MBeanServer mbs;
-	private Set<String> metricNames;
+	private Set<MetricID> metricIDs;
 
 	public MonitorMetrics(String objectName) {
 		this.mbs = ManagementFactory.getPlatformMBeanServer();
 		this.objectName = objectName;
-		this.metricNames = new HashSet<String>();
+		this.metricIDs = new HashSet<MetricID>();
+		
 	}
 
 	public void createMetrics(SharedMetricRegistries sharedMetricRegistry, String[][] data) {
@@ -44,8 +47,17 @@ public class MonitorMetrics {
         MetricRegistry registry = sharedMetricRegistry.getOrCreate(MetricRegistry.Type.VENDOR.getName());
         
         for (String[] metricData : data) {
-            String metricName = getMetricName(metricData[MappingTable.METRIC_NAME]);
+        	
+            String metricName = metricData[MappingTable.METRIC_NAME];
+            String metricTagName = metricData[MappingTable.MBEAN_STATS_NAME];
+            
+            Tag metricTag = null;
+            if (metricTagName != null) {
+            	metricTag = new Tag(metricTagName, getMBeanStatsString());
+            }
+            MetricID metricID = new MetricID(metricTagName, metricTag);
             MetricType type = MetricType.valueOf(metricData[MappingTable.METRIC_TYPE]);
+            
             if (MetricType.COUNTER.equals(type)) {
                 MonitorCounter mc = metricData[MappingTable.MBEAN_SUBATTRIBUTE] == null ? 
                         new MonitorCounter(mbs, objectName, metricData[MappingTable.MBEAN_ATTRIBUTE]) :
@@ -53,18 +65,21 @@ public class MonitorMetrics {
                 
         		registry.register(
         				Metadata.builder().withName(metricName).withDisplayName(metricData[MappingTable.METRIC_DISPLAYNAME]).withDescription(metricData[MappingTable.METRIC_DESCRIPTION]).withType(type).withUnit(metricData[MappingTable.METRIC_UNIT]).build(), 
-        			mc);            	
-        		metricNames.add(metricName);
-        		Tr.debug(tc, "Registered " + metricName);
+        			mc, metricTag);
+        		
+        		
+        		
+        		metricIDs.add(metricID);
+        		Tr.debug(tc, "Registered " + metricID.toString());
         	} else if (MetricType.GAUGE.equals(type)) {
             	MonitorGauge<Number> mg =  metricData[MappingTable.MBEAN_SUBATTRIBUTE] == null ?
             		new MonitorGauge<Number>(mbs, objectName, metricData[MappingTable.MBEAN_ATTRIBUTE]) :
             		new MonitorGauge<Number>(mbs, objectName, metricData[MappingTable.MBEAN_ATTRIBUTE], metricData[MappingTable.MBEAN_SUBATTRIBUTE]);
         		registry.register(
         				Metadata.builder().withName(metricName).withDisplayName(metricData[MappingTable.METRIC_DISPLAYNAME]).withDescription(metricData[MappingTable.METRIC_DESCRIPTION]).withType(type).withUnit(metricData[MappingTable.METRIC_UNIT]).build(),
-        			mg);
-        		metricNames.add(metricName);
-        		Tr.debug(tc, "Registered " + metricName);
+        			mg, metricTag);
+        		metricIDs.add(metricID);
+        		Tr.debug(tc, "Registered " + metricID.toString());
             } else {
             	Tr.debug(tc, "Falied to register " + metricName + " because of invalid type " + type);
             }
@@ -141,17 +156,13 @@ public class MonitorMetrics {
     	String portName = portStr.replaceAll("\"", "");	
     	return portName;
 	}
-	
-	private String getMetricName(String name)  {
-		return name.replace("%s", getMBeanStatsString());
-	}
 
 	public void unregisterMetrics(SharedMetricRegistries sharedMetricRegistry) {
 		MetricRegistry registry = sharedMetricRegistry.getOrCreate(MetricRegistry.Type.VENDOR.getName());
-		for (String metricName : metricNames) {
-			boolean rc = registry.remove(metricName);
-			Tr.debug(tc, "Unregistered " + metricName + " " + (rc ? "successfully" : "unsuccessfully"));
+		for (MetricID metricID : metricIDs) {
+			boolean rc = registry.remove(metricID);
+			Tr.debug(tc, "Unregistered " + metricID.toString() + " " + (rc ? "successfully" : "unsuccessfully"));
 		}
-		metricNames.clear();
+		metricIDs.clear();
 	}
 }

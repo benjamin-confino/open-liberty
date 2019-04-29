@@ -26,6 +26,14 @@ public class MappingTable {
 	public static final int METRIC_UNIT = 4;
 	public static final int MBEAN_ATTRIBUTE = 5;
 	public static final int MBEAN_SUBATTRIBUTE = 6;
+	public static final int MBEAN_STATS_NAME = 7; // name change pending
+	
+	public static final String THREADPOOL_TAG_NAME = "pool";
+	public static final String SERVLET_TAG_NAME = "servlet";
+	public static final String CONNECTIONPOOL_TAG_NAME = "datasource";
+	public static final String SESSION_TAG_NAME = "appname";
+	public static final String JAXWS_SERVER_TAG_NAME = "endpoint";
+	public static final String JAXWS_CLIENT_TAG_NAME = "endpoint";
 	
 	public static final String COUNTER = MetricType.COUNTER.toString().toUpperCase();
 	public static final String GAUGE = MetricType.GAUGE.toString().toUpperCase();
@@ -41,57 +49,58 @@ public class MappingTable {
 	}
 	
 	private MappingTable() {
+		
 		String[][] threadPoolTable = new String[][] {
-			{ "threadpool.%s.activeThreads", "Active Threads", "threadpool.activeThreads.description", GAUGE, MetricUnits.NONE, "ActiveThreads", null },
-			{ "threadpool.%s.size", "Thread Pool Size", "threadpool.size.description", GAUGE, MetricUnits.NONE, "PoolSize", null }
+			{ "threadpool.activeThreads", "Active Threads", "threadpool.activeThreads.description", GAUGE, MetricUnits.NONE, "ActiveThreads", null, THREADPOOL_TAG_NAME },
+			{ "threadpool.size", "Thread Pool Size", "threadpool.size.description", GAUGE, MetricUnits.NONE, "PoolSize", null, THREADPOOL_TAG_NAME }
 		};
 		mappingTable.put("WebSphere:type=ThreadPoolStats,name=*", threadPoolTable);
 
 		String[][] servletTable = new String[][] {
-        	{ "servlet.%s.request.total", "Total Request", "servlet.request.total.description", COUNTER, MetricUnits.NONE, "RequestCount", null },
-        	{ "servlet.%s.responseTime.total", "Total Response Time", "servlet.responseTime.total.description", GAUGE, MetricUnits.NANOSECONDS, "ResponseTimeDetails", "total" }
+        	{ "servlet.request.total", "Total Request", "servlet.request.total.description", COUNTER, MetricUnits.NONE, "RequestCount", null, SERVLET_TAG_NAME },
+        	{ "servlet.responseTime.total", "Total Response Time", "servlet.responseTime.total.description", GAUGE, MetricUnits.NANOSECONDS, "ResponseTimeDetails", "total", SERVLET_TAG_NAME }
         };
 		mappingTable.put("WebSphere:type=ServletStats,name=*", servletTable);
-		
+
 		String[][] connectionPoolTable = new String[][]{
-			{ "connectionpool.%s.create.total", "Create Count", "connectionpool.create.total.description", COUNTER, MetricUnits.NONE, "CreateCount", null },
-			{ "connectionpool.%s.destroy.total", "Destroy Count", "connectionpool.destroy.total.description", COUNTER, MetricUnits.NONE, "DestroyCount", null },
-			{ "connectionpool.%s.managedConnections", "Managed Connections Count", "connectionpool.managedConnections.description", GAUGE, MetricUnits.NONE, "ManagedConnectionCount", null },
-			{ "connectionpool.%s.connectionHandles", "Connection Handles Count", "connectionpool.connectionHandles.description", GAUGE, MetricUnits.NONE, "ConnectionHandleCount", null },
-			{ "connectionpool.%s.freeConnections", "Free Connections Count", "connectionpool.freeConnections.description", GAUGE, MetricUnits.NONE,  "FreeConnectionCount", null },
-			{ "connectionpool.%s.waitTime.total", "Total Wait Time", "connectionpool.waitTime.total.description", GAUGE, MetricUnits.MILLISECONDS,  "WaitTimeDetails", "total" },
-			{ "connectionpool.%s.inUseTime.total", "Total In Use Time", "connectionpool.inUseTime.total.description", GAUGE, MetricUnits.MILLISECONDS,  "InUseTimeDetails", "total" },
-			{ "connectionpool.%s.queuedRequests.total", "Queued Connection Request Count", "connectionpool.queuedRequests.total.description", COUNTER, MetricUnits.NONE,  "WaitTimeDetails", "count" },
-			{ "connectionpool.%s.usedConnections.total", "Used Connections", "connectionpool.usedConnections.total.description", COUNTER, MetricUnits.NONE,  "InUseTimeDetails", "count" },
+			{ "connectionpool.create.total", "Create Count", "connectionpool.create.total.description", COUNTER, MetricUnits.NONE, "CreateCount", null, CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.destroy.total", "Destroy Count", "connectionpool.destroy.total.description", COUNTER, MetricUnits.NONE, "DestroyCount", null, CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.managedConnections", "Managed Connections Count", "connectionpool.managedConnections.description", GAUGE, MetricUnits.NONE, "ManagedConnectionCount", null, CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.connectionHandles", "Connection Handles Count", "connectionpool.connectionHandles.description", GAUGE, MetricUnits.NONE, "ConnectionHandleCount", null, CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.freeConnections", "Free Connections Count", "connectionpool.freeConnections.description", GAUGE, MetricUnits.NONE,  "FreeConnectionCount", null, CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.waitTime.total", "Total Wait Time", "connectionpool.waitTime.total.description", GAUGE, MetricUnits.MILLISECONDS,  "WaitTimeDetails", "total", CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.inUseTime.total", "Total In Use Time", "connectionpool.inUseTime.total.description", GAUGE, MetricUnits.MILLISECONDS,  "InUseTimeDetails", "total", CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.queuedRequests.total", "Queued Connection Request Count", "connectionpool.queuedRequests.total.description", COUNTER, MetricUnits.NONE,  "WaitTimeDetails", "count", CONNECTIONPOOL_TAG_NAME },
+			{ "connectionpool.usedConnections.total", "Used Connections", "connectionpool.usedConnections.total.description", COUNTER, MetricUnits.NONE,  "InUseTimeDetails", "count", CONNECTIONPOOL_TAG_NAME },
 		};
 		mappingTable.put("WebSphere:type=ConnectionPoolStats,name=*", connectionPoolTable);
 		
 		String[][] sessionTable = new String[][]{
-        	{ "session.%s.create.total", "Total Create Count", "session.create.total.description", GAUGE, MetricUnits.NONE, "CreateCount", null },
-        	{ "session.%s.liveSessions", "Live Sessions Count", "session.liveSessions.description", GAUGE, MetricUnits.NONE, "LiveCount", null },
-        	{ "session.%s.activeSessions", "Active Sessions Count", "session.activeSessions.description", GAUGE, MetricUnits.NONE, "ActiveCount", null },
-        	{ "session.%s.invalidated.total", "Total Invalidated Sessions Count", "session.invalidated.total.description", COUNTER, MetricUnits.NONE, "InvalidatedCount", null },
-        	{ "session.%s.invalidatedbyTimeout.total", "Total Invalidated Sessions by Timeout Count", "session.invalidatedbyTimeout.total.description", COUNTER, MetricUnits.NONE, "InvalidatedCountbyTimeout", null }
+        	{ "session.create.total", "Total Create Count", "session.create.total.description", GAUGE, MetricUnits.NONE, "CreateCount", null, SESSION_TAG_NAME },
+        	{ "session.liveSessions", "Live Sessions Count", "session.liveSessions.description", GAUGE, MetricUnits.NONE, "LiveCount", null, SESSION_TAG_NAME },
+        	{ "session.activeSessions", "Active Sessions Count", "session.activeSessions.description", GAUGE, MetricUnits.NONE, "ActiveCount", null, SESSION_TAG_NAME },
+        	{ "session.invalidated.total", "Total Invalidated Sessions Count", "session.invalidated.total.description", COUNTER, MetricUnits.NONE, "InvalidatedCount", null, SESSION_TAG_NAME },
+        	{ "session.invalidatedbyTimeout.total", "Total Invalidated Sessions by Timeout Count", "session.invalidatedbyTimeout.total.description", COUNTER, MetricUnits.NONE, "InvalidatedCountbyTimeout", null, SESSION_TAG_NAME }
 		};
 		mappingTable.put("WebSphere:type=SessionStats,name=*", sessionTable);
 		
 		String[][] jaxwsServerTable = new String[][]{
-        	{ "jaxws.server.%s.invocations.total", "Total Endpoint Invocations Count", "jaxws.invocations.total.description", COUNTER, MetricUnits.NONE, "NumInvocations", null },
-        	{ "jaxws.server.%s.checkedApplicationFaults.total", "Total Checked Application Faults Count", "jaxws.checkedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumCheckedApplicationFaults", null },
-        	{ "jaxws.server.%s.logicalRuntimeFaults.total", "Total Logical Runtime Faults Count", "jaxws.logicalRuntimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumLogicalRuntimeFaults", null },
-        	{ "jaxws.server.%s.runtimeFaults.total", "Total Runtime Faults Count", "jaxws.runtimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumRuntimeFaults", null },
-        	{ "jaxws.server.%s.uncheckedApplicationFaults.total ", "Total Unchecked Application Faults Count", "jaxws.uncheckedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumUnCheckedApplicationFaults", null },
-        	{ "jaxws.server.%s.responseTime.total", "Total Response Time", "jaxws.responseTime.total.description", GAUGE, MetricUnits.MILLISECONDS, "TotalHandlingTime", null }
+        	{ "jaxws.server.invocations.total", "Total Endpoint Invocations Count", "jaxws.invocations.total.description", COUNTER, MetricUnits.NONE, "NumInvocations", null, JAXWS_SERVER_TAG_NAME },
+        	{ "jaxws.server.checkedApplicationFaults.total", "Total Checked Application Faults Count", "jaxws.checkedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumCheckedApplicationFaults", null, JAXWS_SERVER_TAG_NAME },
+        	{ "jaxws.server.logicalRuntimeFaults.total", "Total Logical Runtime Faults Count", "jaxws.logicalRuntimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumLogicalRuntimeFaults", null, JAXWS_SERVER_TAG_NAME },
+        	{ "jaxws.server.runtimeFaults.total", "Total Runtime Faults Count", "jaxws.runtimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumRuntimeFaults", null, JAXWS_SERVER_TAG_NAME },
+        	{ "jaxws.server.uncheckedApplicationFaults.total ", "Total Unchecked Application Faults Count", "jaxws.uncheckedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumUnCheckedApplicationFaults", null, JAXWS_SERVER_TAG_NAME },
+        	{ "jaxws.server.responseTime.total", "Total Response Time", "jaxws.responseTime.total.description", GAUGE, MetricUnits.MILLISECONDS, "TotalHandlingTime", null, JAXWS_SERVER_TAG_NAME }
 		};
 		mappingTable.put("WebSphere:feature=jaxws,*,type=Performance.Counter.Server", jaxwsServerTable);
 		
 		String[][] jaxwsClientTable = new String[][]{
-        	{ "jaxws.client.%s.invocations.total", "Total Endpoint Invocations Count", "jaxws.invocations.total.description", COUNTER, MetricUnits.NONE, "NumInvocations", null },
-        	{ "jaxws.client.%s.checkedApplicationFaults.total", "Total Checked Application Faults Count", "jaxws.checkedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumCheckedApplicationFaults", null },
-        	{ "jaxws.client.%s.logicalRuntimeFaults.total", "Total Logical Runtime Faults Count", "jaxws.logicalRuntimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumLogicalRuntimeFaults", null },
-        	{ "jaxws.client.%s.runtimeFaults.total", "Total Runtime Faults Count", "jaxws.runtimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumRuntimeFaults", null },
-        	{ "jaxws.client.%s.uncheckedApplicationFaults.total ", "Total Unchecked Application Faults Count", "jaxws.uncheckedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumUnCheckedApplicationFaults", null },
-        	{ "jaxws.client.%s.responseTime.total", "Total Response Time", "jaxws.responseTime.total.description", GAUGE, MetricUnits.MILLISECONDS, "TotalHandlingTime", null }
+        	{ "jaxws.client.invocations.total", "Total Endpoint Invocations Count", "jaxws.invocations.total.description", COUNTER, MetricUnits.NONE, "NumInvocations", null, JAXWS_CLIENT_TAG_NAME },
+        	{ "jaxws.client.checkedApplicationFaults.total", "Total Checked Application Faults Count", "jaxws.checkedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumCheckedApplicationFaults", null, JAXWS_CLIENT_TAG_NAME },
+        	{ "jaxws.client.logicalRuntimeFaults.total", "Total Logical Runtime Faults Count", "jaxws.logicalRuntimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumLogicalRuntimeFaults", null, JAXWS_CLIENT_TAG_NAME },
+        	{ "jaxws.client.runtimeFaults.total", "Total Runtime Faults Count", "jaxws.runtimeFaults.total.description", COUNTER, MetricUnits.NONE, "NumRuntimeFaults", null, JAXWS_CLIENT_TAG_NAME },
+        	{ "jaxws.client.uncheckedApplicationFaults.total ", "Total Unchecked Application Faults Count", "jaxws.uncheckedApplicationFaults.total.description", COUNTER, MetricUnits.NONE, "NumUnCheckedApplicationFaults", null, JAXWS_CLIENT_TAG_NAME },
+        	{ "jaxws.client.responseTime.total", "Total Response Time", "jaxws.responseTime.total.description", GAUGE, MetricUnits.MILLISECONDS, "TotalHandlingTime", null, JAXWS_CLIENT_TAG_NAME }
 		};
 		mappingTable.put("WebSphere:feature=jaxws,*,type=Performance.Counter.Client", jaxwsClientTable);
 	}

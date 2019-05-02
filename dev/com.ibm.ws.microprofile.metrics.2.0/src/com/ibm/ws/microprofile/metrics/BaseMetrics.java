@@ -96,13 +96,13 @@ public class BaseMetrics {
 
         //CLASSLOADING METRICS
         //turnGauge
-        registry.register(Metadata.builder().withName("classloader.currentLoadedClass.count").withDisplayName("Current Loaded Class Count").withDescription("classloader.currentLoadedClass.count.description").withType(MetricType.GAUGE).withUnit(MetricUnits.NONE).build(),
+        registry.register(Metadata.builder().withName("classloader.loadedClasses.count").withDisplayName("Current Loaded Class Count").withDescription("classloader.currentLoadedClass.count.description").withType(MetricType.GAUGE).withUnit(MetricUnits.NONE).build(),
                           new BMGauge<Number>(BaseMetricConstants.CLASSLOADING_OBJECT_TYPE, "LoadedClassCount"));
 
-        registry.register(Metadata.builder().withName("classloader.loadedClass.total").withDisplayName("Total Loaded Class Count").withDescription("classloader.totalLoadedClass.count.description").withType(MetricType.COUNTER).withUnit(MetricUnits.NONE).build(),
+        registry.register(Metadata.builder().withName("classloader.loadedClasses.total").withDisplayName("Total Loaded Class Count").withDescription("classloader.totalLoadedClass.count.description").withType(MetricType.COUNTER).withUnit(MetricUnits.NONE).build(),
                           new BMCounter(BaseMetricConstants.CLASSLOADING_OBJECT_TYPE, "TotalLoadedClassCount"));
 
-        registry.register(Metadata.builder().withName("classloader.unloadedClass.total").withDisplayName("Total Unloaded Class Count").withDescription("classloader.totalUnloadedClass.count.description").withType(MetricType.COUNTER).withUnit(MetricUnits.NONE).build(),
+        registry.register(Metadata.builder().withName("classloader.unloadedClasses.total").withDisplayName("Total Unloaded Class Count").withDescription("classloader.totalUnloadedClass.count.description").withType(MetricType.COUNTER).withUnit(MetricUnits.NONE).build(),
                           new BMCounter(BaseMetricConstants.CLASSLOADING_OBJECT_TYPE, "UnloadedClassCount"));
 
         //OPERATING SYSTEM

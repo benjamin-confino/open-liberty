@@ -64,7 +64,7 @@ public class PrometheusBuilder {
          * As per the microprofile metric specification for prometheus output
          * if the metric name already ends with "_total" do nothing.
          */
-        String lineName = (!name.endsWith("_total")) ? name + "_total" : name;
+        String lineName = appendSuffixIfNeeded(getPrometheusMetricName(name), "total");
 
         getPromTypeLine(builder, lineName, "counter");
         getPromHelpLine(builder, lineName, description);
@@ -274,5 +274,9 @@ public class PrometheusBuilder {
         out = out.replaceAll("[^A-Za-z0-9_]", "");
 
         return out;
+    }
+
+    private static String appendSuffixIfNeeded(String metricName, String suffix) {
+        return (!metricName.endsWith("_" + suffix)) ? metricName + "_" + suffix : metricName;
     }
 }

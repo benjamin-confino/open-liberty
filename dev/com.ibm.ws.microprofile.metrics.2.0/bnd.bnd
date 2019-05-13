@@ -45,12 +45,12 @@ Include-Resource: \
 -dsannotations-inherit: true
 -dsannotations: \
 	com.ibm.ws.microprofile.metrics.MetricsConfig,\
-	com.ibm.ws.microprofile.metrics.config.MyConfig,\
+	com.ibm.ws.microprofile.metrics.config.MetricAppNameConfigSourceProvider,\
 	com.ibm.ws.microprofile.metrics.impl.SharedMetricRegistries,\
 	com.ibm.ws.microprofile.metrics.ApplicationListener
 
 app-resources= \
-    META-INF/services/org.eclipse.microprofile.config.spi.ConfigSource
+    META-INF/services/org.eclipse.microprofile.config.spi.ConfigSourcees
 
 Service-Component: \
     com.ibm.ws.microprofile.metrics.ResourceProvider; \

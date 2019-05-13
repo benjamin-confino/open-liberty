@@ -4,5 +4,9 @@
 	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="aQute.bnd.classpath.container"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.ws.container.service"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.ws.container.service.compat"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.ws.adaptable.module"/>
+	<classpathentry kind="src" path="/com.ibm.ws.logging.core"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

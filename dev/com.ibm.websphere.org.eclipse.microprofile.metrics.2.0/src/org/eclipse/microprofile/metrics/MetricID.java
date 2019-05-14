@@ -23,6 +23,8 @@
  **********************************************************************/
 package org.eclipse.microprofile.metrics;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -34,8 +36,6 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  *
@@ -74,10 +74,10 @@ public class MetricID implements Comparable<MetricID> {
     public static final String APPLICATION_NAME_TAG = "_app";
 
     private static final String GLOBAL_TAG_MALFORMED_EXCEPTION = "Malformed list of Global Tags. Tag names "
-                                                                 + "must match the following regex [a-zA-Z_][a-zA-Z0-9_]*."
-                                                                 + " Global Tag values must not be empty."
-                                                                 + " Global Tag values MUST escape equal signs `=` and commas `,`"
-                                                                 + " with a backslash `\\` ";
+                                                                + "must match the following regex [a-zA-Z_][a-zA-Z0-9_]*."
+                                                                + " Global Tag values must not be empty."
+                                                                + " Global Tag values MUST escape equal signs `=` and commas `,`"
+                                                                + " with a backslash `\\` ";
 
     /**
      * Name of the metric.
@@ -119,16 +119,9 @@ public class MetricID implements Comparable<MetricID> {
         globalTags.ifPresent(this::parseGlobalTags);
 
         // for application servers with multiple applications deployed, distinguish metrics from different applications by adding the "_app" tag
-        System.out.println("MetricID " + Thread.currentThread().getContextClassLoader().toString());
         Optional<String> applicationName = ConfigProvider.getConfig().getOptionalValue(APPLICATION_NAME_VARIABLE, String.class);
-
-        if (applicationName.isPresent()) {
-            System.out.println(ConfigProvider.getConfig());
-            System.out.println("Metric Id --- > " + applicationName);
-        }
-
         applicationName.ifPresent(appName -> {
-            if (!appName.isEmpty()) {
+            if(!appName.isEmpty()) {
                 addTag(new Tag(APPLICATION_NAME_TAG, appName));
             }
         });
@@ -196,9 +189,9 @@ public class MetricID implements Comparable<MetricID> {
     @Override
     public String toString() {
         return "MetricID{" +
-               "name='" + name + '\'' +
-               ", tags=[" + getTagsAsString() +
-               "]}";
+            "name='" + name + '\'' +
+            ", tags=[" + getTagsAsString() +
+            "]}";
     }
 
     /**
@@ -305,7 +298,8 @@ public class MetricID implements Comparable<MetricID> {
                     compareVal = thisEntry.getKey().compareTo(otherEntry.getKey());
                     if (compareVal != 0) {
                         return compareVal;
-                    } else {
+                    } 
+                    else {
                         compareVal = thisEntry.getValue().compareTo(otherEntry.getValue());
                         if (compareVal != 0) {
                             return compareVal;

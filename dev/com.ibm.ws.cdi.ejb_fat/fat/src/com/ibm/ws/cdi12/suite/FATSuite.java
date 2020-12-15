@@ -37,22 +37,12 @@ import componenttest.rules.repeater.RepeatTests;
  */
 @RunWith(Suite.class)
 @SuiteClasses({
-                AroundConstructBeanTest.class,
-                AroundConstructEjbTest.class,
-                CDIManagedBeanInterceptorTest.class,
-                EJB32Test.class,
-                EjbConstructorInjectionTest.class,
-                EjbDiscoveryTest.class,
-                EjbMiscTest.class,
-                EjbTimerTest.class,
-                InjectParameterTest.class,
-                MultipleNamedEJBTest.class,
-                StatefulSessionBeanInjectionTest.class,
+                EjbMiscTest.class
 })
 public class FATSuite {
 
     @ClassRule
-    public static RepeatTests r = RepeatTests.withoutModification().andWith(FeatureReplacementAction.EE8_FEATURES());
+    public static RepeatTests r = RepeatTests.withoutModification();//.andWith(FeatureReplacementAction.EE8_FEATURES());
 
     /**
      * @see {@link FatLogHandler#generateHelpFile()}

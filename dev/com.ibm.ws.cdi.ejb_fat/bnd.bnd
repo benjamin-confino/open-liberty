@@ -26,11 +26,13 @@ src: \
 	test-applications/multipleEJBsSingleClass.war/src,\
 	test-applications/multipleWar1.war/src,\
 	test-applications/multipleWar2.war/src,\
+	test-applications/multipleWar3.war/src,\
         test-applications/utilLib.jar/src,\
         test-applications/statefulSessionBeanInjection.jar/src,\
         test-applications/statefulSessionBeanInjection.war/src,\
 	test-applications/postConstructErrorMessageApp.war/src,\
-        test-applications/multipleWarEmbeddedJar.jar/src
+        test-applications/multipleWarEmbeddedJar.jar/src,\
+        test-applications/multipleWarEmbeddedJar2.jar/src
 	
 	
 

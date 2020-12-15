@@ -1,0 +1,12 @@
+<ejb-jar xmlns="http://java.sun.com/xml/ns/javaee" version="3.0" metadata-complete="false">
+  <enterprise-beans>
+    <session>
+      <ejb-class>com.ibm.ws.cdi.lib.MyEjb</ejb-class>	 
+      <session-type>Stateless</session-type>	
+  </session>
+    <session>
+      <ejb-class>com.ibm.ws.cdi.lib.two.MyEjb</ejb-class>	 
+      <session-type>Stateless</session-type>	
+  </session>
+  </enterprise-beans>
+</ejb-jar>

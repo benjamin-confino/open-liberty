@@ -9,10 +9,24 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 apply from: '../wlp-gradle/subprojects/fat.gradle'
+apply from: '../wlp-gradle/subprojects/maven-central-mirror.gradle'
 
-addRequiredLibraries.dependsOn addJakartaTransformer
+configurations {
+  deltaspikeWarLibs
+}
 	
 dependencies {
   requiredLibs project(':io.openliberty.org.apache.commons.logging'), project(':io.openliberty.org.apache.commons.codec'), 'net.sf.jtidy:jtidy:9.3.8'
+  deltaspikeWarLibs 'org.apache.deltaspike.core:deltaspike-core-api:1.9.4',
+    'org.apache.deltaspike.core:deltaspike-core-impl:1.9.4'
 }
 
+task addToDeltaspikeWar(type: Copy) {
+  from configurations.deltaspikeWarLibs
+  into new File(autoFvtDir, 'test-applications/jaxrsWithExtension.war/resources/WEB-INF/lib')
+}
+
+addRequiredLibraries {
+  dependsOn addToDeltaspikeWar
+  dependsOn addJakartaTransformer
+}

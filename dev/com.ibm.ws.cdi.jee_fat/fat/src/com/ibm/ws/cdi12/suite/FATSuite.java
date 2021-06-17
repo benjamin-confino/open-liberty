@@ -35,19 +35,21 @@ import com.ibm.ws.cdi12.fat.tests.JEEInjectionTargetTest;
 import com.ibm.ws.cdi12.fat.tests.SimpleJSFTest;
 import com.ibm.ws.cdi12.fat.tests.SimpleJSFWithSharedLibTest;
 import com.ibm.ws.cdi12.fat.tests.SimpleJSPTest;
+import com.ibm.ws.cdi12.fat.tests.JaxWithExtensionTest;
 import com.ibm.ws.fat.util.FatLogHandler;
 
 /**
  * Tests specific to cdi-1.2
  */
 @RunWith(Suite.class)
-@SuiteClasses({
+@SuiteClasses({/*
              CDI12WebServicesTest.class,
              InjectIntoPath.class,
              JEEInjectionTargetTest.class,
              SimpleJSFTest.class,
              SimpleJSFWithSharedLibTest.class,
-             SimpleJSPTest.class,
+             SimpleJSPTest.class,*/
+             JaxWithExtensionTest.class,
 })
 public class FATSuite {
     

@@ -17,6 +17,7 @@ src: \
 	fat/src,\
 	test-applications/injectIntoPath.war/src,\
 	test-applications/jaxrsResourceInjection.war/src,\
+	test-applications/jaxrsWithExtension.war/src,\
 	test-applications/jeeInjectionTargetTest.war/src,\
 	test-applications/jeeInjectionTargetTestEJB.jar/src,\
 	test-applications/jeeInjectionTargetTestJSP2.3.war/src,\
@@ -67,4 +68,6 @@ test.project: true
 	com.ibm.websphere.javaee.el.3.0;version=latest,\
 	com.ibm.websphere.javaee.jsp.2.3;version=latest,\
 	com.ibm.websphere.javaee.websocket.1.1;version=latest,\
-	com.ibm.ws.cdi.interfaces;version=latest
+	com.ibm.ws.cdi.interfaces;version=latest,\
+	org.apache.deltaspike.core:deltaspike-core-api;version=1.9.4,\
+	org.apache.deltaspike.core:deltaspike-core-impl;version=1.9.4

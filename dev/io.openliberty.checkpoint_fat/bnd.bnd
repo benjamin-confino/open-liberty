@@ -36,6 +36,7 @@ src: \
 	test-applications/ServletEARapp/src,\
 	test-applications/webEARapp/src,\
 	test-applications/mphealth/src,\
+	test-applications/mpReactiveMessaging/src,\
 	test-applications/facesApp/src,\
 	test-applications/jsonb/src,\
 	test-applications/jsonp/src,\
@@ -174,6 +175,9 @@ tested.features: \
 	com.ibm.ws.security.auth.data.common;version=latest,\
 	com.ibm.websphere.javaee.jaxb.2.2;version=latest,\
 	com.ibm.websphere.appserver.api.distributedMap;version=latest,\
+	com.ibm.websphere.org.eclipse.microprofile.reactive.messaging.1.0;version=latest,\
+	com.ibm.websphere.org.eclipse.microprofile.reactive.streams.operators.1.0;version=latest,\
+	com.ibm.websphere.org.reactivestreams.reactive-streams.1.0;version=latest,\
 	org.testng
 
 -sub: *.bnd

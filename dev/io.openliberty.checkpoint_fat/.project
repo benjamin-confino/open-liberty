@@ -20,4 +20,11 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>bndtools.core.bndnature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>mpReactiveMessaging</name>
+			<type>2</type>
+			<location>/home/gb110303/workspaces/open-liberty/dev/io.openliberty.checkpoint_fat/test-applications/mpReactiveMessaging/src</location>
+		</link>
+	</linkedResources>
 </projectDescription>

@@ -1,51 +1,31 @@
 /*******************************************************************************
- * Copyright (c) 2015 IBM Corporation and others.
+ * Copyright (c) 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
- * SPDX-License-Identifier: EPL-2.0
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package com.ibm.ws.cdi.jsf;
+
+import java.util.List;
+import java.util.Map;
 
 import javax.faces.application.ViewHandler;
 import javax.faces.context.FacesContext;
 
-import org.jboss.weld.Container;
-import org.jboss.weld.jsf.ConversationAwareViewHandler;
+public interface IBMViewHandler {
 
-import com.ibm.websphere.ras.Tr;
-import com.ibm.websphere.ras.TraceComponent;
+    public String getActionURL(FacesContext facesContext, String viewId);
 
-public class IBMViewHandler extends ConversationAwareViewHandler {
+    public String getBookmarkableURL(FacesContext context, String viewId, Map<String, List<String>> parameters,
+                                     boolean includeViewParams);
 
-    private static final TraceComponent tc = Tr.register(IBMViewHandler.class);
+    public String getRedirectURL(FacesContext context, String viewId, Map<String, List<String>> parameters,
+                                 boolean includeViewParams);
 
-    private final String contextID;
+    public String getResourceURL(FacesContext context, String path);
 
-    public IBMViewHandler(ViewHandler delegate, String contextID) {
-        super(delegate);
-        this.contextID = contextID;
-    }
-
-    /**
-     * Allow the delegate to produce the action URL. If the conversation is
-     * long-running, append the conversation id request parameter to the query
-     * string part of the URL, but only if the request parameter is not already
-     * present.
-     * <p/>
-     * This covers form actions Ajax calls, and redirect URLs (which we want)
-     * and link hrefs (which we don't)
-     * 
-     * @see {@link ViewHandler#getActionURL(FacesContext, String)}
-     */
-    @Override
-    public String getActionURL(FacesContext facesContext, String viewId) {
-        facesContext.getAttributes().put(Container.CONTEXT_ID_KEY, contextID);
-        return super.getActionURL(facesContext, viewId);
-    }
+    public ViewHandler getWrapped();
 }

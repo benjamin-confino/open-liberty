@@ -47,4 +47,5 @@ WS-TraceGroup: JCDI
 	com.ibm.ws.jsf.shared;version=latest,\
 	com.ibm.ws.org.jboss.weld;version=latest,\
 	com.ibm.ws.cdi.interfaces;version=latest, \
-	com.ibm.ws.org.osgi.annotation.versioning;version=latest
+	com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
+    io.openliberty.osgi.internal.common;version=latest

@@ -58,7 +58,7 @@ public class CDIJSFInitializerImpl implements CDIJSFInitializer {
 
                 CDIRuntime cdiRuntime = (CDIRuntime) cdiService;
                 String contextID = cdiRuntime.getCurrentApplicationContextID();
-                application.setViewHandler(new IBMViewHandler(application.getViewHandler(), contextID));
+                application.setViewHandler(new IBMViewHandlerImpl(application.getViewHandler(), contextID));
             }
         }
     }

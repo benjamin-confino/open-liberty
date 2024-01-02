@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2023 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,9 @@ import javax.faces.application.ViewHandler;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import com.ibm.ws.jsf.container.cdi.IBMViewHandlerProxy;
+import com.ibm.ws.cdi.jsf.IBMViewHandler;
+import com.ibm.ws.cdi.jsf.IBMViewHandlerFactory;
+import io.openliberty.osgi.internal.common.OSGIHelpers;
 
 public class JSFContainerApplication extends ApplicationWrapper {
 
@@ -44,7 +46,10 @@ public class JSFContainerApplication extends ApplicationWrapper {
                     log.logp(Level.FINEST, JSFContainerApplication.class.getName(), "setViewHandler", "Setting IBM View Handler");
                 }
 
-                delegate.setViewHandler(new IBMViewHandlerProxy(handler, appname));
+                IBMViewHandlerFactory viewHandlerFactory = OSGIHelpers.getService(IBMViewHandlerFactory.class, JSFContainerApplication.class);
+                IBMViewHandler ibmHandler = viewHandlerFactory.createIBMViewHandler(handler, appname);
+
+                delegate.setViewHandler((ViewHandler) ibmHandler);
 
             } else {
                 if (log.isLoggable(Level.FINEST)) {

@@ -51,6 +51,7 @@ Subsystem-Name: Contexts and Dependency Injection 1.2
  com.ibm.ws.org.jboss.logging, \
  com.ibm.ws.org.jboss.classfilewriter, \
  com.ibm.ws.cdi.weld, \
+ com.ibm.ws.kernel.phonehome, \
  com.ibm.ws.cdi.internal, \
  com.ibm.ws.cdi.1.2.weld, \
  com.ibm.websphere.javaee.jaxb.2.2; apiJar=false; require-java:="9"; location:="dev/api/spec/,lib/", \

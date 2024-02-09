@@ -220,9 +220,9 @@ public class FATServletClient {
     /**
      * Return the path and query for a servlet test method URL.
      *
-     * @param  path     the servlet context and path (e.g., {@code "test"})
-     * @param  testName the test name
-     * @return          the path and query (e.g., {@code "/test?testMethod=test"})
+     * @param  path     the context root and path to the servlet (e.g., {@code "myApp/myServlet"}). A leading slash will causes a 404.
+     * @param  testName the test name (e.g., {@code "/myTestMethod"}). A trailing slash is required.
+     * @return          the path and query (e.g., {@code "/myApp/myServlet?testMethod=myTestMethod"})
      */
     public static String getPathAndQuery(String path, String testName) {
         if (!path.contains("?")) {

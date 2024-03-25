@@ -129,7 +129,7 @@ public class FaultToleranceTck40Launcher {
             additionalProps.put("timeoutMultiplier", "1.0");
         }
 
-        String bucketName = "io.openliberty.microprofile.faulttolerance.4.0.internal_fat_tck";
+        String bucketName = "io.openliberty.microprofile.faulttolerance.5.0.internal_fat_tck";
         String testName = this.getClass() + ":launchFaultTolerance40TCK";
         Type type = Type.MICROPROFILE;
         String specName = "Fault Tolerance";

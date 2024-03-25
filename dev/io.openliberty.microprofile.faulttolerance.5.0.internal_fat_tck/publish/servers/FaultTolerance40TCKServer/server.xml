@@ -12,8 +12,8 @@
  -->
 <server>
    <featureManager>
-        <feature>mpFaultTolerance-4.0</feature>
-        <feature>mpMetrics-4.0</feature>
+        <feature>mpFaultTolerance-5.0</feature>
+        <feature>mpMetrics-5.0</feature>
         <feature>restfulWS-3.0</feature>
         <feature>localConnector-1.0</feature>
         <feature>arquillian-support-jakarta-2.1</feature>

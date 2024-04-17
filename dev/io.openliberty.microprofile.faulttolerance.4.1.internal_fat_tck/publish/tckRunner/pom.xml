@@ -15,13 +15,13 @@
 -->
 <project xmlns="http://maven.apache.org/POM/5.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/5.0.0 http://maven.apache.org/xsd/maven-5.0.0.xsd">
-    <modelVersion>5.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.openliberty.microprofile.faulttolerance</groupId>
     <artifactId>tck.runner</artifactId>
-    <version>5.0</version>
+    <version>4.1</version>
     <packaging>pom</packaging>
-    <name>MicroProfile Fault Tolerance 5.0 TCK Runner</name>
+    <name>MicroProfile Fault Tolerance 4.1 TCK Runner</name>
 
     <properties>
         <arquillian.version>1.7.0.Alpha13</arquillian.version>

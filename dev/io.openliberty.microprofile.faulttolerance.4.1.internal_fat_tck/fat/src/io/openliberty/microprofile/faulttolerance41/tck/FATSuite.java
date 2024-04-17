@@ -10,14 +10,14 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package io.openliberty.microprofile.faulttolerance40.tck;
+package io.openliberty.microprofile.faulttolerance50.tck;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ FaultToleranceTck40Launcher.class })
+@SuiteClasses({ FaultToleranceTck50Launcher.class })
 
 public class FATSuite {
 

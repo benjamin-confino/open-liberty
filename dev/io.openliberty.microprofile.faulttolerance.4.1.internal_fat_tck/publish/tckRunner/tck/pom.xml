@@ -7,17 +7,17 @@
     OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
     the specific language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/5.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/5.0.0 http://maven.apache.org/xsd/maven-5.0.0.xsd">
-    <modelVersion>5.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.openliberty.microprofile.faulttolerance</groupId>
     <artifactId>tck.runner.tck</artifactId>
-    <version>5.0</version>
+    <version>4.1</version>
     <name>MicroProfile Fault Tolerance TCK Runner TCK Module</name>
 
     <properties>
         <microprofile.config.version>3.0.1</microprofile.config.version>
         <microprofile.faulttolerance.version>5.0.2</microprofile.faulttolerance.version>
-        <microprofile.metrics.version>5.0</microprofile.metrics.version>
+        <microprofile.metrics.version>4.1</microprofile.metrics.version>
 
         <arquillian.version>1.7.0.Alpha13</arquillian.version>
         <arquillian.liberty.managed.jakarta.version>2.1.1</arquillian.liberty.managed.jakarta.version>
@@ -68,24 +68,19 @@
         <dependency>
             <groupId>org.eclipse.microprofile.fault-tolerance</groupId>
             <artifactId>microprofile-fault-tolerance-tck</artifactId>
-            <version>${microprofile.faulttolerance.version}</version>
+            <version>4.1</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.microprofile.fault-tolerance</groupId>
             <artifactId>microprofile-fault-tolerance-api</artifactId>
             <version>${microprofile.faulttolerance.version}</version>
             <scope>system</scope>
-            <systemPath>${io.openliberty.org.eclipse.microprofile.faulttolerance.5.0}</systemPath>
+            <systemPath>${io.openliberty.org.eclipse.microprofile.faulttolerance.4.0}</systemPath>
         </dependency>
         <dependency>
             <groupId>org.eclipse.microprofile.config</groupId>
             <artifactId>microprofile-config-api</artifactId>
             <version>${microprofile.config.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.microprofile.metrics</groupId>
-            <artifactId>microprofile-metrics-api</artifactId>
-            <version>${microprofile.metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.enterprise</groupId>

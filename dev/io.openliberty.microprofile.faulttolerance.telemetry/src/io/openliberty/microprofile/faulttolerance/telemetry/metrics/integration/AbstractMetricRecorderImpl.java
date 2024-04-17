@@ -92,7 +92,7 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
     private LongSupplier queuePopulationSupplier = null;
     private LongSupplier concurrentExecutionCountSupplier = null;
 
-    public AbstractMetricRecorderImpl(String classAndMethod, String metricPrefix, Meter meter, RetryPolicy retryPolicy, CircuitBreakerPolicy circuitBreakerPolicy,
+    public AbstractMetricRecorderImpl(String classAndMethod, String metricPrefix + ", Meter meter, RetryPolicy retryPolicy, CircuitBreakerPolicy circuitBreakerPolicy,
                                       TimeoutPolicy timeoutPolicy,
                                       BulkheadPolicy bulkheadPolicy, FallbackPolicy fallbackPolicy, AsyncType isAsync) {
 
@@ -103,7 +103,7 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
         methodAttribute = Attributes.builder().put("method", classAndMethod).build();
 
         if (retryPolicy != null || timeoutPolicy != null || circuitBreakerPolicy != null || bulkheadPolicy != null || fallbackPolicy != null) {//TODO, should I stick the method name in these descriptions?
-            ftInvocationsTotal = meter.counterBuilder("ft.invocations.total").setDescription("The number of times the method was called.").build(); //TODO put all these descriptions in a translation file
+            ftInvocationsTotal = meter.counterBuilder(metricPrefix + "invocations.total").setDescription("The number of times the method was called.").build(); //TODO put all these descriptions in a translation file
             fallbackDefined = (fallbackPolicy != null);
         } else {
             ftInvocationsTotal = null;
@@ -111,25 +111,25 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
         }
 
         if (retryPolicy != null) {
-            ftRetryCallsTotal = meter.counterBuilder("ft.retry.calls.total").setDescription("The number of times the retry logic was run. This will always be once per method call.").build();
-            ftRetryRetriesTotal = meter.counterBuilder("ft.retry.calls.total").setDescription("The number of times the method was retried.").build();
+            ftRetryCallsTotal = meter.counterBuilder(metricPrefix + "retry.calls.total").setDescription("The number of times the retry logic was run. This will always be once per method call.").build();
+            ftRetryRetriesTotal = meter.counterBuilder(metricPrefix + "retry.retries.total").setDescription("The number of times the method was retried.").build();
         } else {
             ftRetryCallsTotal = null;
             ftRetryRetriesTotal = null;
         }
 
         if (timeoutPolicy != null) {
-            ftTimeoutCallsTotal = meter.counterBuilder("ft.timeout.calls.total").setDescription("The number of times the timeout logic was run. This will usually be once per method call, but may be zero times if the circuit breaker prevents execution or more than once if the method is retried.").build();
-            ftTimeoutExecutionDuration = meter.histogramBuilder("ft.timeout.calls.total").setDescription("Histogram of execution times for the method.").ofLongs().setUnit("nanoseconds").build();
+            ftTimeoutCallsTotal = meter.counterBuilder(metricPrefix + "timeout.calls.total").setDescription("The number of times the timeout logic was run. This will usually be once per method call, but may be zero times if the circuit breaker prevents execution or more than once if the method is retried.").build();
+            ftTimeoutExecutionDuration = meter.histogramBuilder(metricPrefix + "timeout.executionDuration").setDescription("Histogram of execution times for the method.").ofLongs().setUnit("nanoseconds").build();
         } else {
             ftTimeoutCallsTotal = null;
             ftTimeoutExecutionDuration = null;
         }
 
         if (circuitBreakerPolicy != null) {
-            ftCircuitbreakerCallsTotal = meter.counterBuilder("ft.circuitbreaker.calls.total").setDescription("The number of times the circuit breaker logic was run. This will usually be once per method call, but may be more than once if the method call is retried.").build();
-            ftCircuitbreakerStateTotal = meter.gaugeBuilder("ft.circuitbreaker.state.total").ofLongs().setUnit("nanoseconds").setDescription("Amount of time the circuit breaker has spent in each state.").buildWithCallback(this::getCircuitBreakerAccumulatedTimes);
-            ftCircuitbreakerOpenedTotal = meter.counterBuilder("ft.circuitbreaker.opened.total").setDescription("Number of times the circuit breaker has moved from closed state to open state.").build();
+            ftCircuitbreakerCallsTotal = meter.counterBuilder(metricPrefix + "circuitbreaker.calls.total").setDescription("The number of times the circuit breaker logic was run. This will usually be once per method call, but may be more than once if the method call is retried.").build();
+            ftCircuitbreakerStateTotal = meter.gaugeBuilder(metricPrefix + "circuitbreaker.state.total").ofLongs().setUnit("nanoseconds").setDescription("Amount of time the circuit breaker has spent in each state.").buildWithCallback(this::getCircuitBreakerAccumulatedTimes);
+            ftCircuitbreakerOpenedTotal = meter.counterBuilder(metricPrefix + "circuitbreaker.opened.total").setDescription("Number of times the circuit breaker has moved from closed state to open state.").build();
         } else {
             ftCircuitbreakerCallsTotal = null;
             ftCircuitbreakerStateTotal = null;
@@ -137,13 +137,13 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
         }
 
         if (bulkheadPolicy != null) {
-            ftBulkheadCallsTotal = meter.counterBuilder("ft.bulkhead.calls.total").setDescription("The number of times the bulkhead logic was run. This will usually be once per method call, but may be zero times if the circuit breaker prevented execution or more than once if the method call is retried.").build();
-            ftBulkheadExecutionsRunning = meter.gaugeBuilder("ft.bulkhead.executionsRunning").ofLongs().setDescription("Number of currently running executions.").buildWithCallback(this::getQueuePopulation);
-            ftBulkheadRunningDuration = meter.histogramBuilder("ft.bulkhead.runningDuration").setDescription("Histogram of the time that method executions spent running.").ofLongs().setUnit("nanoseconds").build();
+            ftBulkheadCallsTotal = meter.counterBuilder(metricPrefix + "bulkhead.calls.total").setDescription("The number of times the bulkhead logic was run. This will usually be once per method call, but may be zero times if the circuit breaker prevented execution or more than once if the method call is retried.").build();
+            ftBulkheadExecutionsRunning = meter.gaugeBuilder(metricPrefix + "bulkhead.executionsRunning").ofLongs().setDescription("Number of currently running executions.").buildWithCallback(this::getConcurrentExecutions);
+            ftBulkheadRunningDuration = meter.histogramBuilder(metricPrefix + "bulkhead.runningDuration").setDescription("Histogram of the time that method executions spent running.").ofLongs().setUnit("nanoseconds").build();
 
             if (isAsync == AsyncType.ASYNC) {
-                ftBulkheadExecutionsWaiting = meter.gaugeBuilder("ft.bulkhead.executionsWaiting").ofLongs().setDescription("Number of executions currently waiting in the queue.").buildWithCallback(this::getConcurrentExecutions);
-                ftBulkheadWaitingDuration = meter.histogramBuilder("ft.bulkhead.runningDuration").setDescription("Histogram of the time that method executions spent waiting in the queue").ofLongs().setUnit("nanoseconds").build();
+                ftBulkheadExecutionsWaiting = meter.gaugeBuilder(metricPrefix + "bulkhead.executionsWaiting").ofLongs().setDescription("Number of executions currently waiting in the queue.").buildWithCallback(this::getQueuePopulation);
+                ftBulkheadWaitingDuration = meter.histogramBuilder(metricPrefix + "bulkhead.waitingDuration").setDescription("Histogram of the time that method executions spent waiting in the queue").ofLongs().setUnit("nanoseconds").build();
             } else {
                 ftBulkheadExecutionsWaiting = null;
                 ftBulkheadWaitingDuration = null;
@@ -216,10 +216,10 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
                     ab.put("retryResult", "exceptionNotRetryable");
                     break;
                 case EXCEPTION_IN_RETRY_ON:
-                    //Unreachable. This method captures the result of the final retry. If there was an exception another retry will be triggered.
+                    //Unreachable. This method captures the result of the final retry. If there was an exception marked RetryOn another retry will be triggered.
                     break;
                 case EXCEPTION_IN_ABORT_ON:
-                    // This method captures the result of the final retry. If there was an exception another retry will be triggered.
+                    ab.put("retryResult", "exceptionNotRetryable");
                     break;
                 case MAX_RETRIES_REACHED:
                     ab.put("retryResult", "maxRetriesReached");
@@ -313,7 +313,7 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
     @Override
     public void incrementBulkeadAcceptedCount() {
         if (ftBulkheadCallsTotal != null) {
-            ftBulkheadCallsTotal.add(1, Attributes.builder().putAll(methodAttribute).put("bulkheadResult", "rejected").build());
+            ftBulkheadCallsTotal.add(1, Attributes.builder().putAll(methodAttribute).put("bulkheadResult", "accepted").build());
         }
     }
 
@@ -447,6 +447,7 @@ public abstract class AbstractMetricRecorderImpl implements MetricRecorder {
             pop = queuePopulationSupplier.getAsLong();
         }
 
+        System.out.println("GREP2 + population " + pop);
         measurement.record(pop, Attributes.builder().putAll(methodAttribute).build());
     }
 

@@ -30,8 +30,8 @@ import com.ibm.ws.microprofile.faulttolerance.spi.TimeoutPolicy;
 @Trivial
 public class MetricRecorderImpl extends AbstractMetricRecorderImpl {
 
-    public MetricRecorderImpl(String metricPrefix, Meter meter, RetryPolicy retryPolicy, CircuitBreakerPolicy circuitBreakerPolicy, TimeoutPolicy timeoutPolicy,
+    public MetricRecorderImpl(String classAndMethod, String metricPrefix, Meter meter, RetryPolicy retryPolicy, CircuitBreakerPolicy circuitBreakerPolicy, TimeoutPolicy timeoutPolicy,
                               BulkheadPolicy bulkheadPolicy, FallbackPolicy fallbackPolicy, AsyncType isAsync) {
-        super(metricPrefix, meter, retryPolicy, circuitBreakerPolicy, timeoutPolicy, bulkheadPolicy, fallbackPolicy, isAsync);
+        super(classAndMethod, metricPrefix, meter, retryPolicy, circuitBreakerPolicy, timeoutPolicy, bulkheadPolicy, fallbackPolicy, isAsync);
     }
 }

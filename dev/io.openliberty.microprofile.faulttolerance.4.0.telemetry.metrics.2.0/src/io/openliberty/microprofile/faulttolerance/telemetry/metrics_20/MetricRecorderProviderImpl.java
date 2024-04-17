@@ -57,6 +57,7 @@ public class MetricRecorderProviderImpl implements MetricRecorderProvider {
     private final Map<ClassLoader, Boolean> metricsEnabledCache = new WeakHashMap<>();
 
     private final static String CONFIG_METRICS_ENABLED = "MP_Fault_Tolerance_Metrics_Enabled";
+    private final static String METRICS_PREFIX = "ft";
 
     private final WeakHashMap<Method, MetricRecorder> recorders = new WeakHashMap<>();
 
@@ -78,15 +79,10 @@ public class MetricRecorderProviderImpl implements MetricRecorderProvider {
                                              BulkheadPolicy bulkheadPolicy, FallbackPolicy fallbackPolicy, AsyncType isAsync) {
         if (isMetricsEnabled(method.getDeclaringClass())) {
             Meter meter = OpenTelemetryAccessor.getOpenTelemetryInfo().getOpenTelemetry().getMeter(OpenTelemetryConstants.INSTRUMENTATION_NAME);
-            return new MetricRecorderImpl(getMetricPrefix(method), meter, retryPolicy, circuitBreakerPolicy, timeoutPolicy, bulkheadPolicy, fallbackPolicy, isAsync);
+            return new MetricRecorderImpl(method.getDeclaringClass().getName() + "." + method.getName(), METRICS_PREFIX, meter, retryPolicy, circuitBreakerPolicy, timeoutPolicy, bulkheadPolicy, fallbackPolicy, isAsync);
         } else {
             return DummyMetricRecorder.get();
         }
-    }
-
-    private String getMetricPrefix(Method method) {
-        String name = "ft." + method.getDeclaringClass().getCanonicalName() + "." + method.getName();
-        return name;
     }
 
     private boolean isMetricsEnabled(Class<?> clazz) {

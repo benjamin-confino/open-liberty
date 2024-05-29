@@ -24,7 +24,8 @@ IBM-API-Package: \
   io.opentelemetry.semconv.trace.attributes;type="third-party",\
   io.opentelemetry.semconv.resource.attributes;type="third-party",\
   io.opentelemetry.sdk.resources;type="third-party",\
-  io.opentelemetry.instrumentation.annotations;type="third-party"
+  io.opentelemetry.instrumentation.annotations;type="third-party",\
+  io.openliberty.microprofile.telemetry.api;type="ibm-api"
 -features=\
   io.openliberty.jakarta.annotation-2.1, \
   io.openliberty.restfulWS-3.1, \

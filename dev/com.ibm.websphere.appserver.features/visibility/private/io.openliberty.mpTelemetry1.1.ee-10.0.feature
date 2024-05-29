@@ -1,6 +1,7 @@
 -include= ~${workspace}/cnf/resources/bnd/feature.props
 symbolicName=io.openliberty.mpTelemetry1.1.ee-10.0
 singleton=true
+IBM-API-Package: io.openliberty.microprofile.telemetry.api;type="ibm-api"
 -features=\
   io.openliberty.restfulWS-3.1, \
   io.openliberty.mpConfig-3.1, \

@@ -13,15 +13,15 @@
 
 package io.openliberty.microprofile.telemetry20.internal.cdi;
 
-import com.ibm.websphere.ras.Tr;
-import com.ibm.websphere.ras.TraceComponent;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
-import io.opentelemetry.api.metrics.Meter;
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+
+import io.openliberty.microprofile.telemetry.api.OpenTelemetryAccessor;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
-import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
+import io.opentelemetry.api.metrics.Meter;
 
 @ApplicationScoped
 public class OpenTelemetryMeterProducer {
@@ -31,6 +31,6 @@ public class OpenTelemetryMeterProducer {
     @Produces
     public Meter getMeter() {
         //I'm using this rather than an injected paramater for performence.
-        return OpenTelemetryAccessor.getOpenTelemetryInfo().getOpenTelemetry().getMeter(OpenTelemetryConstants.INSTRUMENTATION_NAME);
+        return OpenTelemetryAccessor.getOpenTelemetry().getMeter(OpenTelemetryConstants.INSTRUMENTATION_NAME);
     }
 }

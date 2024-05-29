@@ -30,11 +30,11 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
 
 import io.openliberty.checkpoint.spi.CheckpointPhase;
+import io.openliberty.microprofile.telemetry.api.OpenTelemetryAccessor;
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
-import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfo;
 import io.openliberty.microprofile.telemetry.internal.common.rest.AbstractTelemetryContainerFilter;
 import io.openliberty.microprofile.telemetry.internal.common.rest.RestRouteCache;
-import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -95,10 +95,10 @@ public class TelemetryContainerFilter extends AbstractTelemetryContainerFilter i
     }
 
     private Instrumenter<ContainerRequestContext, ContainerResponseContext> createInstrumenter() {
-        final OpenTelemetryInfo openTelemetry = OpenTelemetryAccessor.getOpenTelemetryInfo();
-        if (openTelemetry.getEnabled() && !AgentDetection.isAgentActive()) {
+        if (OpenTelemetryAccessor.isOpenTelemetryEnabled() && !AgentDetection.isAgentActive()) {
+            final OpenTelemetry openTelemetry = OpenTelemetryAccessor.getOpenTelemetry();
             InstrumenterBuilder<ContainerRequestContext, ContainerResponseContext> builder = Instrumenter.builder(
-                                                                                                                  openTelemetry.getOpenTelemetry(),
+                                                                                                                  openTelemetry,
                                                                                                                   INSTRUMENTATION_NAME,
                                                                                                                   HttpSpanNameExtractor.create(HTTP_SERVER_ATTRIBUTES_GETTER));
 

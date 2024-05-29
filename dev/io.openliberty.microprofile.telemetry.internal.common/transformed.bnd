@@ -16,6 +16,7 @@ Bundle-Description: MicroProfile.telemetry, common code; version=${bVersion}; Ja
 ## NOTE: Sub-bundles have different contents
 
 Export-Package: \
+	io.openliberty.microprofile.telemetry.api;version='1.0',\
 	io.openliberty.microprofile.telemetry.internal.interfaces;version='1.0',\
 	io.openliberty.microprofile.telemetry.internal.common;version='1.0',\
 	io.openliberty.microprofile.telemetry.internal.common.constants;version='1.0',\

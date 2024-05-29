@@ -30,7 +30,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 
-import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
+import io.openliberty.microprofile.telemetry.api.OpenTelemetryAccessor;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;

@@ -10,7 +10,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package io.openliberty.microprofile.telemetry.internal.interfaces;
+package io.openliberty.microprofile.telemetry.api;
 
 import java.lang.annotation.Annotation;
 import java.util.Optional;
@@ -26,38 +26,59 @@ import com.ibm.ws.kernel.service.util.ServiceCaller;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
 import io.openliberty.microprofile.telemetry.internal.common.info.ErrorOpenTelemetryInfo;
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfo;
+import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryInfoFactory;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 
+/**
+ * This class provides access to OpenTelemetry classes associated with the current application and information about OpenTelemetry's state.
+ *
+ * If OpenTelmetry is not enabled for the current application, or if this class is invoked outside the context of an application, it will return no-op objects.
+ */
 public class OpenTelemetryAccessor {
 
     private static final TraceComponent tc = Tr.register(OpenTelemetryAccessor.class);
     private static final ServiceCaller<OpenTelemetryInfoFactory> openTelemetryInfoFactoryService = new ServiceCaller<OpenTelemetryInfoFactory>(OpenTelemetryAccessor.class, OpenTelemetryInfoFactory.class);
     private static final ServiceCaller<CDIService> cdiService = new ServiceCaller<CDIService>(OpenTelemetryAccessor.class, CDIService.class);
 
-    //See https://github.com/open-telemetry/opentelemetry-java-docs/blob/main/otlp/src/main/java/io/opentelemetry/example/otlp/ExampleConfiguration.java
-    /**
-     * Gets or creates the instance of OpenTelemetry associated with this application and returns it wrapped inside an OpenTelemetryInfo.
-     *
-     * @return An instance of OpenTelemetryInfo containing the instance of OpenTelemetry associated with this application. This instance will be a no-op OpenTelemetry if telemetry
-     *         is disabled or the application has shut down.
-     */
-    public static OpenTelemetryInfo getOpenTelemetryInfo() {
+    private static OpenTelemetryInfo getOpenTelemetryInfo() {
         Optional<OpenTelemetryInfo> openTelemetryInfo = openTelemetryInfoFactoryService.call((factory) -> {
             return factory.getOpenTelemetryInfo();
         });
+        //orElseGet is not strictly needed, as factory.getOpenTelemetryInfo() already returns an ErrorOpenTelemetryInfo
+        //on an exception but it covers us if something goes wrong in ServiceCaller itself.
         return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
+    }
+
+    //See https://github.com/open-telemetry/opentelemetry-java-docs/blob/main/otlp/src/main/java/io/opentelemetry/example/otlp/ExampleConfiguration.java
+    /**
+     * Gets or creates the instance of OpenTelemetry associated with this application.
+     *
+     * @return The instance of OpenTelemetry associated with this application. This instance will be a no-op OpenTelemetry if OpenTelemetry
+     *         is disabled, the application has shut down, or this method is called outside the context of an application.
+     */
+    public static OpenTelemetry getOpenTelemetry() {
+        return getOpenTelemetryInfo().getOpenTelemetry();
+    }
+
+    /**
+     * @return true if there is an instnace of OpenTelemetry associated with this application and it is enabled, otherwise false.
+     */
+    public static boolean isOpenTelemetryEnabled() {
+        return getOpenTelemetryInfo().getEnabled();
     }
 
     /**
      * Gets or creates a tracer instance from the TracerProvider for the OpenTelemetry instance associated with this application.
      *
-     * @return An tracer instance from the instance of OpenTelemetry associated with this application. This instance will be a no-op if telemetry is disabled or the application has
-     *         shut down.
+     * @return An tracer instance from the instance of OpenTelemetry associated with this application. This instance will be a no-op if OpenTelemetry is disabled, the application
+     *         has
+     *         shut down, or this method is invoked outside the context of an application.
      */
     public static Tracer getTracer() {
-        return getOpenTelemetryInfo().getOpenTelemetry().getTracer(OpenTelemetryConstants.INSTRUMENTATION_NAME);
+        return getOpenTelemetry().getTracer(OpenTelemetryConstants.INSTRUMENTATION_NAME);
     }
 
     /**

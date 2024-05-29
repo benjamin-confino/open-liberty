@@ -34,8 +34,8 @@ import com.ibm.ws.microprofile.faulttolerance.spi.RetryPolicy;
 import com.ibm.ws.microprofile.faulttolerance.spi.TimeoutPolicy;
 import com.ibm.ws.microprofile.faulttolerance.utils.DummyMetricRecorder;
 
+import io.openliberty.microprofile.telemetry.api.OpenTelemetryAccessor;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
-import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
 import io.opentelemetry.api.metrics.Meter;
 
 @Component(configurationPolicy = IGNORE)
@@ -76,7 +76,7 @@ public class MetricRecorderProviderImpl implements MetricRecorderProvider {
     private MetricRecorder createNewRecorder(Method method, RetryPolicy retryPolicy, CircuitBreakerPolicy circuitBreakerPolicy, TimeoutPolicy timeoutPolicy,
                                              BulkheadPolicy bulkheadPolicy, FallbackPolicy fallbackPolicy, AsyncType isAsync) {
         if (isMetricsEnabled(method.getDeclaringClass())) {
-            Meter meter = OpenTelemetryAccessor.getOpenTelemetryInfo().getOpenTelemetry().getMeter(OpenTelemetryConstants.INSTRUMENTATION_NAME);
+            Meter meter = OpenTelemetryAccessor.getOpenTelemetry().getMeter(OpenTelemetryConstants.INSTRUMENTATION_NAME);
             return new MetricRecorderImpl(method.getDeclaringClass().getName() + "."
                                           + method.getName(), meter, retryPolicy, circuitBreakerPolicy, timeoutPolicy, bulkheadPolicy, fallbackPolicy, isAsync);
         } else {

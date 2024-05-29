@@ -16,17 +16,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import io.openliberty.checkpoint.spi.CheckpointPhase;
+import io.openliberty.microprofile.telemetry.api.OpenTelemetryAccessor;
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
-import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfo;
 import io.openliberty.microprofile.telemetry.internal.common.rest.AbstractTelemetryServletFilter;
-import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -101,17 +100,16 @@ public class TelemetryServletFilter extends AbstractTelemetryServletFilter imple
     private Instrumenter<ServletRequest, ServletResponse> createInstrumenter() {
         // Check if the HTTP tracing should be disabled
         boolean httpTracingDisabled = config.getOptionalValue(CONFIG_DISABLE_HTTP_TRACING_PROPERTY, Boolean.class).orElse(false);
-        OpenTelemetryInfo otelInfo = OpenTelemetryAccessor.getOpenTelemetryInfo();
+        boolean otelEnabled = OpenTelemetryAccessor.isOpenTelemetryEnabled();
         if (tc.isDebugEnabled()) {
             Tr.debug(tc, CONFIG_DISABLE_HTTP_TRACING_PROPERTY + "=" + httpTracingDisabled);
-            Tr.debug(tc, "otelInfo.getEnabled()=" + otelInfo.getEnabled());
+            Tr.debug(tc, "otelInfo.getEnabled()=" + otelEnabled);
         }
-        if (otelInfo != null &&
-            otelInfo.getEnabled() &&
+        if (otelEnabled &&
             !AgentDetection.isAgentActive() &&
             !httpTracingDisabled) {
             InstrumenterBuilder<ServletRequest, ServletResponse> builder = Instrumenter.builder(
-                                                                                                otelInfo.getOpenTelemetry(),
+                                                                                                OpenTelemetryAccessor.getOpenTelemetry(),
                                                                                                 INSTRUMENTATION_NAME,
                                                                                                 HttpSpanNameExtractor.create(HTTP_SERVER_ATTRIBUTES_GETTER));
 

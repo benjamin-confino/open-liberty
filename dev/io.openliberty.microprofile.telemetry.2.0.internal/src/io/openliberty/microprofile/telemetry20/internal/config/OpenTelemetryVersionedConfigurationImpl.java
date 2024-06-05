@@ -15,7 +15,6 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfoFactoryImpl;
-import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 

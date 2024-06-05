@@ -16,7 +16,6 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
 
 /**
  * An impl of OpenTelemetryInfo that only occurs if an OpenTelemetryInfo was created after the relevant application has shut down.

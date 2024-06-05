@@ -23,7 +23,6 @@ IBM-API-Package: \
   io.opentelemetry.sdk.trace.data;type="third-party",\
   io.opentelemetry.sdk.trace.samplers;type="third-party",\
   io.opentelemetry.sdk.metrics;type="third-party",\
-  io.opentelemetry.sdk.metrics;type="third-party",\
   io.opentelemetry.sdk.metrics.export;type="third-party",\
   io.opentelemetry.sdk.metrics.data;type="third-party",\
   io.opentelemetry.sdk.logs.export;type="third-party",\
@@ -36,7 +35,9 @@ IBM-API-Package: \
   io.opentelemetry.semconv;type="third-party",\
   io.opentelemetry.sdk.resources;type="third-party",\
   io.opentelemetry.instrumentation.annotations;type="third-party",\
-  io.opentelemetry.exporter.logging;type="third-party"
+  io.opentelemetry.exporter.logging;type="third-party",\
+  io.opentelemetry.exporter.otlp.logs;type="third-party",\
+  io.opentelemetry.exporter.otlp;type="third-party"
 -features=\
   io.openliberty.mpTelemetry2.0.ee-10.0; ibm.tolerates:= "9.0, 8.0, 7.0"
 -bundles=\

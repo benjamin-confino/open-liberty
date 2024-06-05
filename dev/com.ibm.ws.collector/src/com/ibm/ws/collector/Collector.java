@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+
 
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -81,6 +82,7 @@ public abstract class Collector implements Handler, Formatter {
             //Process and update the configuration
             configure(configuration);
         } catch (IOException e) {
+            e.printStackTrace();
             //FFDC
         }
         Target target = getTarget();
@@ -178,6 +180,7 @@ public abstract class Collector implements Handler, Formatter {
      * Target is also initialized using the information provided in the configuration
      */
     private void configure(Map<String, Object> configuration) throws IOException {
+        System.out.println("in configure");
         List<TaskConfig> configList = new ArrayList<TaskConfig>();
         configList.addAll(parseConfig(configuration));
         for (TaskConfig taskConfig : configList) {
@@ -227,8 +230,20 @@ public abstract class Collector implements Handler, Formatter {
             }
             tagList = validList.toArray(new String[validList.size()]);
         }
-
-        int maxFieldLength = (Integer) config.get(MAX_FIELD_KEY);
+   
+        
+        
+        
+        
+        
+        int maxFieldLength;
+        if(config.get(MAX_FIELD_KEY) != null) {
+            maxFieldLength = (Integer) config.get(MAX_FIELD_KEY);
+        }
+        else {
+            maxFieldLength = 2048;
+        }
+        
         int maxEvents = 0;
         //Events Throttling - maxEvents
         if (config.containsKey(MAX_EVENTS_KEY)) {

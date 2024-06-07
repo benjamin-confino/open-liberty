@@ -18,7 +18,8 @@ import java.util.Set;
 
 /**
  * We weave in the hamcrest jar that is used by some of the microprofile config tck tests.
- * The build.gradle file pull the hamcrest jar from maven and puts it in the lib directory
+ * The tck's build.gradle files pull the hamcrest jar from maven and puts it in the tck project's
+ * lib directory, from there we acquire it and add it to the test archive.
  */
 public class HamcrestArchiveProcessor extends AbstractArchiveWeaver {
 

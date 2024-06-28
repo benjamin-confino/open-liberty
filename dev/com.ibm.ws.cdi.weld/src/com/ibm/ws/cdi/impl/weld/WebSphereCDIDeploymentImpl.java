@@ -63,7 +63,7 @@ import com.ibm.ws.cdi.liberty.ExtensionMetaData;
 import com.ibm.wsspi.injectionengine.InjectionException;
 import com.ibm.wsspi.injectionengine.ReferenceContext;
 
-public class WebSphereCDIDeploymentImpl implements WebSphereCDIDeployment {
+public class WebSphereCDIDeploymentImpl extends AbstractWebSphereCDIDeployment {
 
     private static final TraceComponent tc = Tr.register(WebSphereCDIDeploymentImpl.class);
 
@@ -804,5 +804,11 @@ public class WebSphereCDIDeploymentImpl implements WebSphereCDIDeployment {
         }
 
         return empty;
+    }
+
+    //for unit testing
+    @Override
+    protected Collection<WebSphereBeanDeploymentArchive> getAllBDAs() {
+        return deploymentDBAs.values();
     }
 }

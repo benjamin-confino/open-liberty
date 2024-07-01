@@ -1,12 +1,14 @@
 package com.ibm.ws.cdi.impl.weld;
 
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
-import com.ibm.websphere.ras.annotation.Trivial;
+import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.internal.interfaces.ArchiveType;
 import com.ibm.ws.cdi.internal.interfaces.CDIArchive;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
@@ -30,43 +32,68 @@ public abstract class AbstractBeanDeploymentArchive implements WebSphereBeanDepl
     protected static final TraceComponent tc = Tr.register(BeanDeploymentArchiveImpl.class);
 
     protected boolean scanned = false;
-    protected boolean visited = false;
+
+    //only those classes which are beans are actually loaded ... stored in an ordered map to make debug easier
+    protected final Map<String, Class<?>> beanClasses = new TreeMap<String, Class<?>>();
+
+    protected final Set<WebSphereBeanDeploymentArchive> accessibleBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
+    protected final Set<WebSphereBeanDeploymentArchive> descendantBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
+
+    protected boolean hasBeans = false;
+
+    protected CDIArchive archive;
+
+    //all of the classes ... those in this archive and any additional ones
+    protected final Set<String> allClasses = new HashSet<String>();
 
     @Override
-    @Trivial
-    public boolean hasBeenVisited() {
-        return visited;
-    }
-
-    @Override
-    public Iterator<WebSphereBeanDeploymentArchive> visit() {
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            Tr.entry(tc, "visit");
-        }
-        visited = true;
-
-        Set<WebSphereBeanDeploymentArchive> accessibleBDAs = getDescendetBDAs();
-
-        Iterator<WebSphereBeanDeploymentArchive> toReturn = null;
-        //Runtime Extensions can see everything so they break even our rough dependency graph.
-        //Return no children so they get scanned immediately.
-        if (getArchive().getType() != ArchiveType.RUNTIME_EXTENSION) {
-
-            toReturn = accessibleBDAs.iterator();
-        } else {
-            if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-                Tr.exit(tc, getHumanReadableName() + " visited, found these children: []");
+    public void scan() throws CDIException {
+        if (!this.scanned) {
+            if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
+                Tr.debug(tc, "scan [ " + getHumanReadableName() + " ] BEGIN SCAN");
             }
-            toReturn = Collections.emptyListIterator();
+            //mark as scanned up front to prevent loops
+            this.scanned = true;
+
+            // Scan any accessible BDAs first to ensure we scan more visible things (shared libs, ear libs) before less visible things (war classes, war libs)
+            // This helps to make sure that the later call to isAccessibleBean works
+            // Don't scan accessible BDAs of runtime extensions because they sit outside the hierarchy and some of them need to see everything
+            if (getType() != ArchiveType.RUNTIME_EXTENSION) {
+                for (WebSphereBeanDeploymentArchive child : accessibleBDAs) {
+                    if (!child.hasBeenScanned()) {
+                        child.scan();
+                    }
+                }
+            }
+
+            scanForBeanClassNames();
         }
 
-        if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
-            String children = getArchive().getType() != ArchiveType.RUNTIME_EXTENSION ? accessibleBDAs.toString() : "[]";
-            Tr.exit(tc, getHumanReadableName() + " visited, found these children: " + children);
-        }
-
-        return toReturn;
     }
+
+    @Override
+    public boolean hasBeenScanned() {
+        return scanned;
+    }
+
+    protected boolean isAccessibleBean(Class<?> beanClass) {
+        boolean accessibleBean = false;
+        for (WebSphereBeanDeploymentArchive child : accessibleBDAs) {
+            if (child.containsBeanClass(beanClass)) {
+                accessibleBean = true;
+                break;
+            }
+        }
+        return accessibleBean;
+    }
+
+    protected abstract void initializeJEEComponentClasses(Set<String> allClasses2) throws CDIException;
+
+    protected abstract void initializeInjectionClasses(Collection<Class<?>> values) throws CDIException;
+
+    protected abstract void scanForEndpoints() throws CDIException;
+
+    protected abstract Set<String> scanForBeanClassNames() throws CDIException;
 
     @Override
     public abstract CDIArchive getArchive();

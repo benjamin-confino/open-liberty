@@ -33,27 +33,48 @@ import junit.framework.Assert;
 public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
 
     private static AtomicInteger orderScannedCounter = new AtomicInteger(1);
-    Set<WebSphereBeanDeploymentArchive> descendetBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
     private int orderScanned = -1;
 
     final CDIArchive archive;
     private final int acceptableFloor;
     private final int acceptableCeiling;
+    String id;
 
-    public MockBeanDeploymentArchive(ArchiveType type, int acceptableFloor, int acceptableCeiling) {
+    public MockBeanDeploymentArchive(ArchiveType type, int acceptableFloor, int acceptableCeiling, String id) {
         archive = new MockCDIArchive(type);
         this.acceptableFloor = acceptableFloor;
         this.acceptableCeiling = acceptableCeiling;
+        this.id = id + archive.getType().toString();
     }
 
     public void seenInAcceptableOrder() {
-        Assert.assertTrue("archive type: " + archive.getType() + " expected something between " + acceptableFloor + " and " + acceptableCeiling + " but was " + orderScanned,
+        Assert.assertTrue("archive: " + id + " expected something between " + acceptableFloor + " and " + acceptableCeiling + " but was " + orderScanned,
                           orderScanned >= acceptableFloor && orderScanned <= acceptableCeiling);
     }
 
     @Override
-    public void scan() throws CDIException {
+    protected Set<String> scanForBeanClassNames() throws CDIException {
+
         orderScanned = orderScannedCounter.getAndIncrement();
+        return new HashSet(); //This will be called after we've finished recursing.
+    }
+
+    public void scannedAfter(MockBeanDeploymentArchive other) {
+        Assert.assertTrue("archve: + " + id + " was scanned after " + other.getId(), orderScanned > other.getOrderScanned());
+    }
+
+    private int getOrderScanned() {
+        return orderScanned;
+    }
+
+    public void assertScanned() {
+        Assert.assertFalse("archive: " + id + " was never scammed", orderScanned == -1);
+    }
+
+    @Override
+    public ArchiveType getType() {
+        // TODO Auto-generated method stub
+        return archive.getType();
     }
 
     @Override
@@ -68,12 +89,12 @@ public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
 
     @Override
     protected Set<WebSphereBeanDeploymentArchive> getDescendetBDAs() {
-        return descendetBDAs;
+        return accessibleBDAs;
     }
 
     @Override
     public void addDescendantBda(WebSphereBeanDeploymentArchive descendantBda) {
-        descendetBDAs.add(descendantBda);
+        accessibleBDAs.add(descendantBda);
 
     }
 
@@ -139,12 +160,6 @@ public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
     }
 
     @Override
-    public ArchiveType getType() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public boolean hasBeans() {
         // TODO Auto-generated method stub
         return false;
@@ -158,12 +173,6 @@ public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
 
     @Override
     public Set<Class<?>> getInjectionClasses() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Set<String> scanForBeanDefiningAnnotations(boolean scanChildren) throws CDIException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -206,12 +215,6 @@ public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
 
     @Override
     public boolean containsBeanClass(Class<?> beanClass) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean hasBeenScanned() {
         // TODO Auto-generated method stub
         return false;
     }
@@ -314,6 +317,30 @@ public class MockBeanDeploymentArchive extends AbstractBeanDeploymentArchive {
 
     @Override
     public ServiceRegistry getServices() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void initializeJEEComponentClasses(Set<String> allClasses2) throws CDIException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void initializeInjectionClasses(Collection<Class<?>> values) throws CDIException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void scanForEndpoints() throws CDIException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public Set<String> scanForBeanDefiningAnnotations(boolean scanChildren) throws CDIException {
         // TODO Auto-generated method stub
         return null;
     }

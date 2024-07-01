@@ -1,7 +1,6 @@
 package com.ibm.ws.cdi.impl.test;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,16 +22,18 @@ import org.jboss.weld.bootstrap.spi.Metadata;
 
 public class MockWebSphereCDIDeployment extends AbstractWebSphereCDIDeployment {
 
-    List<WebSphereBeanDeploymentArchive> allBDAs = new ArrayList<WebSphereBeanDeploymentArchive>();
-
     public MockWebSphereCDIDeployment(List<WebSphereBeanDeploymentArchive> allBDAs) {
-        this.allBDAs = allBDAs;
         Collections.shuffle(allBDAs);
+        int i = 0;
+        for (WebSphereBeanDeploymentArchive bda : allBDAs) {
+            deploymentDBAs.put("" + i, bda);
+            i++;
+        }
     }
 
     @Override
     protected Collection<WebSphereBeanDeploymentArchive> getAllBDAs() {
-        return allBDAs;
+        return deploymentDBAs.values();
     }
 
     /// Below this line is just to keep the compiler happy.

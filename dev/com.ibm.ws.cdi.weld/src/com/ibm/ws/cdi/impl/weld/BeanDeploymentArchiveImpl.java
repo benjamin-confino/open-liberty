@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -36,6 +35,24 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.inject.Inject;
+
+import com.ibm.websphere.ras.Tr;
+import com.ibm.websphere.ras.TraceComponent;
+import com.ibm.websphere.ras.annotation.Trivial;
+import com.ibm.ws.cdi.CDIException;
+import com.ibm.ws.cdi.internal.interfaces.ArchiveType;
+import com.ibm.ws.cdi.internal.interfaces.CDIArchive;
+import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
+import com.ibm.ws.cdi.internal.interfaces.CDIUtils;
+import com.ibm.ws.cdi.internal.interfaces.EjbEndpointService;
+import com.ibm.ws.cdi.internal.interfaces.EndPointsInfo;
+import com.ibm.ws.cdi.internal.interfaces.ManagedBeanDescriptor;
+import com.ibm.ws.cdi.internal.interfaces.Resource;
+import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
+import com.ibm.ws.cdi.internal.interfaces.WebSphereCDIDeployment;
+import com.ibm.ws.cdi.internal.interfaces.WebSphereInjectionServices;
+import com.ibm.ws.cdi.utils.WeldCDIUtils;
+import com.ibm.wsspi.injectionengine.ReferenceContext;
 
 import org.jboss.weld.annotated.enhanced.EnhancedAnnotatedField;
 import org.jboss.weld.bootstrap.api.ServiceRegistry;
@@ -57,24 +74,6 @@ import org.jboss.weld.resources.MemberTransformer;
 import org.jboss.weld.resources.spi.ResourceLoader;
 import org.jboss.weld.resources.spi.ResourceLoadingException;
 
-import com.ibm.websphere.ras.Tr;
-import com.ibm.websphere.ras.TraceComponent;
-import com.ibm.websphere.ras.annotation.Trivial;
-import com.ibm.ws.cdi.CDIException;
-import com.ibm.ws.cdi.internal.interfaces.ArchiveType;
-import com.ibm.ws.cdi.internal.interfaces.CDIArchive;
-import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
-import com.ibm.ws.cdi.internal.interfaces.CDIUtils;
-import com.ibm.ws.cdi.internal.interfaces.EjbEndpointService;
-import com.ibm.ws.cdi.internal.interfaces.EndPointsInfo;
-import com.ibm.ws.cdi.internal.interfaces.ManagedBeanDescriptor;
-import com.ibm.ws.cdi.internal.interfaces.Resource;
-import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
-import com.ibm.ws.cdi.internal.interfaces.WebSphereCDIDeployment;
-import com.ibm.ws.cdi.internal.interfaces.WebSphereInjectionServices;
-import com.ibm.ws.cdi.utils.WeldCDIUtils;
-import com.ibm.wsspi.injectionengine.ReferenceContext;
-
 /**
  * The implementation of Weld spi BeanDeploymentArchive to represent a CDI bean
  * archive.
@@ -83,10 +82,6 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
 
     //the classes which is directly in this archive
     private final Set<String> archiveClassNames = new HashSet<String>();
-    //all of the classes ... those in this archive and any additional ones
-    private final Set<String> allClasses = new HashSet<String>();
-    //only those classes which are beans are actually loaded ... stored in an ordered map to make debug easier
-    private final Map<String, Class<?>> beanClasses = new TreeMap<String, Class<?>>();
 
     //this archive's classloader
     private final ClassLoader classloader;
@@ -107,15 +102,11 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
     private final String id;
     private final EEModuleDescriptor eeModuleDescriptor;
 
-    private final Set<WebSphereBeanDeploymentArchive> accessibleBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
-    private final Set<WebSphereBeanDeploymentArchive> descendantBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
-
     private final WebSphereCDIDeployment cdiDeployment;
     private final Set<EjbDescriptor<?>> ejbDescriptors = new HashSet<EjbDescriptor<?>>();
 
     private final Map<Class<?>, Set<EjbDescriptor<?>>> ejbDescriptorMap = new HashMap<Class<?>, Set<EjbDescriptor<?>>>();
     private boolean scanned = false;
-    private boolean hasBeans = false;
     private boolean endpointsScanned = false;
 
     private final Set<Class<?>> nonCDIInterceptors = new HashSet<Class<?>>();
@@ -135,8 +126,6 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
 
     private final Map<Class<?>, InjectionTarget<?>> injectionTargets = new HashMap<Class<?>, InjectionTarget<?>>();
     private final Map<Class<?>, List<InjectionPoint>> staticInjectionPoints = new HashMap<Class<?>, List<InjectionPoint>>();
-
-    private final CDIArchive archive;
 
     private static final TraceComponent tc = Tr.register(BeanDeploymentArchiveImpl.class);
 
@@ -187,68 +176,6 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         this.weldServiceRegistry.add(InjectionServices.class, injectionServices);
         this.weldServiceRegistry.add(ResourceLoader.class, this.resourceLoader);
         this.weldServiceRegistry.add(EEModuleDescriptor.class, eeModuleDescriptor);
-    }
-
-    @Override
-    public Set<String> scanForBeanDefiningAnnotations(boolean includeAccessible) throws CDIException {
-
-        Set<String> beanDefiningAnnotations = new HashSet<String>(this.additionalBeanDefiningAnnotations);
-
-        //these are the annotations directly in this BDA
-        if (this.directBeanDefiningAnnotations == null) {
-            this.directBeanDefiningAnnotations = new HashSet<String>();
-
-            BeanDiscoveryMode mode = getBeanDiscoveryMode();
-            if (mode != BeanDiscoveryMode.NONE) {
-                this.directBeanDefiningAnnotations.addAll(archive.getBeanDefiningAnnotations());
-                this.directBeanDefiningAnnotations.retainAll(this.archiveClassNames);
-            }
-
-            this.directBeanDefiningAnnotations.addAll(CDIUtils.BEAN_DEFINING_ANNOTATION_NAMES);
-        }
-        beanDefiningAnnotations.addAll(this.directBeanDefiningAnnotations);
-
-        //do we want to get the annotations in the accessible BDAs as well
-        if (includeAccessible) {
-            if (this.accessibleBeanDefiningAnnotations == null) {
-                this.accessibleBeanDefiningAnnotations = new HashSet<String>();
-                for (WebSphereBeanDeploymentArchive child : accessibleBDAs) {
-                    this.accessibleBeanDefiningAnnotations.addAll(child.scanForBeanDefiningAnnotations(false));
-                }
-            }
-            beanDefiningAnnotations.addAll(this.accessibleBeanDefiningAnnotations);
-        }
-
-        return beanDefiningAnnotations;
-    }
-
-    /**
-     * Determine the bean deployment archive scanning mode
-     * If there is a beans.xml, the bean discovery mode will be used.
-     * If there is no beans.xml, the mode will be annotated, unless the enableImplicitBeanArchives is configured as false via the server.xml.
-     * If there is no beans.xml and the enableImplicitBeanArchives attribute on cdi12 is configured to false, the scanning mode is none.
-     * If there is no beans.xml and this archive is an extension, the bean discovery mode is none.
-     *
-     * @return
-     */
-    private BeanDiscoveryMode getBeanDiscoveryMode() {
-        if (beanDiscoveryMode == null) {
-            BeansXml beansXml = getBeansXml();
-
-            beanDiscoveryMode = BeanDiscoveryMode.ANNOTATED;
-            if (beansXml != null) {
-                beanDiscoveryMode = beansXml.getBeanDiscoveryMode();
-            } else if ((cdiRuntime.isImplicitBeanArchivesScanningDisabled(this.archive) || isExtension())) {
-                // If the server.xml has the configuration of enableImplicitBeanArchives sets to false, we will not scan the implicit bean archives
-                beanDiscoveryMode = BeanDiscoveryMode.NONE;
-            } else if (archive.getType() == ArchiveType.RUNTIME_EXTENSION) {
-                // Runtime extensions default to none as they are extension archives (and this means that only classes explicitly returned by getBeans() will be a bean. 
-                // But if another component has added a beans.xml we will honour their request.
-                beanDiscoveryMode = BeanDiscoveryMode.NONE;
-            }
-        }
-        return beanDiscoveryMode;
-
     }
 
     @Override
@@ -317,18 +244,70 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
 
     }
 
-    private boolean isAccessibleBean(Class<?> beanClass) {
-        boolean accessibleBean = false;
-        for (WebSphereBeanDeploymentArchive child : accessibleBDAs) {
-            if (child.containsBeanClass(beanClass)) {
-                accessibleBean = true;
-                break;
+    @Override
+    public Set<String> scanForBeanDefiningAnnotations(boolean includeAccessible) throws CDIException {
+
+        Set<String> beanDefiningAnnotations = new HashSet<String>(this.additionalBeanDefiningAnnotations);
+
+        //these are the annotations directly in this BDA
+        if (this.directBeanDefiningAnnotations == null) {
+            this.directBeanDefiningAnnotations = new HashSet<String>();
+
+            BeanDiscoveryMode mode = getBeanDiscoveryMode();
+            if (mode != BeanDiscoveryMode.NONE) {
+                this.directBeanDefiningAnnotations.addAll(archive.getBeanDefiningAnnotations());
+                this.directBeanDefiningAnnotations.retainAll(this.archiveClassNames);
             }
+
+            this.directBeanDefiningAnnotations.addAll(CDIUtils.BEAN_DEFINING_ANNOTATION_NAMES);
         }
-        return accessibleBean;
+        beanDefiningAnnotations.addAll(this.directBeanDefiningAnnotations);
+
+        //do we want to get the annotations in the accessible BDAs as well
+        if (includeAccessible) {
+            if (this.accessibleBeanDefiningAnnotations == null) {
+                this.accessibleBeanDefiningAnnotations = new HashSet<String>();
+                for (WebSphereBeanDeploymentArchive child : accessibleBDAs) {
+                    this.accessibleBeanDefiningAnnotations.addAll(child.scanForBeanDefiningAnnotations(false));
+                }
+            }
+            beanDefiningAnnotations.addAll(this.accessibleBeanDefiningAnnotations);
+        }
+
+        return beanDefiningAnnotations;
     }
 
-    private Set<String> scanForBeanClassNames() throws CDIException {
+    /**
+     * Determine the bean deployment archive scanning mode
+     * If there is a beans.xml, the bean discovery mode will be used.
+     * If there is no beans.xml, the mode will be annotated, unless the enableImplicitBeanArchives is configured as false via the server.xml.
+     * If there is no beans.xml and the enableImplicitBeanArchives attribute on cdi12 is configured to false, the scanning mode is none.
+     * If there is no beans.xml and this archive is an extension, the bean discovery mode is none.
+     *
+     * @return
+     */
+    private BeanDiscoveryMode getBeanDiscoveryMode() {
+        if (beanDiscoveryMode == null) {
+            BeansXml beansXml = getBeansXml();
+
+            beanDiscoveryMode = BeanDiscoveryMode.ANNOTATED;
+            if (beansXml != null) {
+                beanDiscoveryMode = beansXml.getBeanDiscoveryMode();
+            } else if ((cdiRuntime.isImplicitBeanArchivesScanningDisabled(this.archive) || isExtension())) {
+                // If the server.xml has the configuration of enableImplicitBeanArchives sets to false, we will not scan the implicit bean archives
+                beanDiscoveryMode = BeanDiscoveryMode.NONE;
+            } else if (archive.getType() == ArchiveType.RUNTIME_EXTENSION) {
+                // Runtime extensions default to none as they are extension archives (and this means that only classes explicitly returned by getBeans() will be a bean.
+                // But if another component has added a beans.xml we will honour their request.
+                beanDiscoveryMode = BeanDiscoveryMode.NONE;
+            }
+        }
+        return beanDiscoveryMode;
+
+    }
+
+    @Override
+    protected Set<String> scanForBeanClassNames() throws CDIException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.entry(tc, "scanForBeanClassNames [ " + getHumanReadableName() + " ]");
         }
@@ -364,7 +343,8 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         return classNames;
     }
 
-    private void initializeInjectionClasses(Collection<Class<?>> beanClasses) throws CDIException {
+    @Override
+    protected void initializeInjectionClasses(Collection<Class<?>> beanClasses) throws CDIException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             String beanNames = beanClasses.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.joining(", "));
             Tr.entry(tc, "initializeInjectionClasses [ " + getHumanReadableName() + " ] {" + beanNames + "}");
@@ -392,7 +372,8 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         }
     }
 
-    private void initializeJEEComponentClasses(Set<String> allClassNames) throws CDIException {
+    @Override
+    protected void initializeJEEComponentClasses(Set<String> allClassNames) throws CDIException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             String classNames = String.join(", ", allClassNames);
             Tr.entry(tc, "initializeJEEComponentClasses [ " + getHumanReadableName() + " ] {" + classNames + "}");
@@ -450,7 +431,8 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         }
     }
 
-    private void scanForEndpoints() throws CDIException {
+    @Override
+    protected void scanForEndpoints() throws CDIException {
         if (TraceComponent.isAnyTracingEnabled() && tc.isEntryEnabled()) {
             Tr.entry(tc, "scanForEndpoints [ " + getHumanReadableName() + " ]");
         }
@@ -827,8 +809,9 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         return getHumanReadableName();
     }
 
+    @Override
     @Trivial
-    private String getHumanReadableName() {
+    protected String getHumanReadableName() {
         return "BDA for " + id + "(" + archive.getType() + ")";
     }
 
@@ -1056,11 +1039,6 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
         this.injectionTargets.put(clazz, injectionTarget);
     }
 
-    @Override
-    public boolean hasBeenScanned() {
-        return scanned;
-    }
-
     /** {@inheritDoc} */
     @Override
     public ArchiveType getType() {
@@ -1141,6 +1119,12 @@ public class BeanDeploymentArchiveImpl extends AbstractBeanDeploymentArchive {
                 return null;
             }
         });
+    }
+
+    @Override
+    protected Set<WebSphereBeanDeploymentArchive> getDescendetBDAs() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

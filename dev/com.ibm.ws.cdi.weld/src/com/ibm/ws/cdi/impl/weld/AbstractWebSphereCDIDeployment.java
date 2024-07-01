@@ -2,12 +2,16 @@ package com.ibm.ws.cdi.impl.weld;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereCDIDeployment;
 
 public abstract class AbstractWebSphereCDIDeployment implements WebSphereCDIDeployment {
+
+    protected final Map<String, WebSphereBeanDeploymentArchive> deploymentDBAs = new HashMap<String, WebSphereBeanDeploymentArchive>();
 
     /**
      * Scan all the BDAs in the deployment to see if there are any bean classes.
@@ -19,13 +23,14 @@ public abstract class AbstractWebSphereCDIDeployment implements WebSphereCDIDepl
      */
     @Override
     public void scan() throws CDIException {
-        Collection<WebSphereBeanDeploymentArchive> allBDAs = new ArrayList<WebSphereBeanDeploymentArchive>(getAllBDAs());
+        Collection<WebSphereBeanDeploymentArchive> allBDAs = new ArrayList<WebSphereBeanDeploymentArchive>(deploymentDBAs.values());
         for (WebSphereBeanDeploymentArchive bda : allBDAs) {
             bda.scanForBeanDefiningAnnotations(true);
         }
-
         for (WebSphereBeanDeploymentArchive bda : allBDAs) {
-            BeanDeploymentArchiveScanner.recursiveScan(bda);
+            if (!bda.hasBeenScanned()) {
+                bda.scan();
+            }
         }
     }
 

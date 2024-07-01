@@ -33,17 +33,6 @@ import java.util.function.Supplier;
 import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.Extension;
 
-import org.jboss.weld.bootstrap.WeldBootstrap;
-import org.jboss.weld.bootstrap.api.ServiceRegistry;
-import org.jboss.weld.bootstrap.api.helpers.SimpleServiceRegistry;
-import org.jboss.weld.bootstrap.spi.BeanDeploymentArchive;
-import org.jboss.weld.bootstrap.spi.BeansXml;
-import org.jboss.weld.bootstrap.spi.Metadata;
-import org.jboss.weld.manager.api.ExecutorServices;
-import org.jboss.weld.security.spi.SecurityServices;
-import org.jboss.weld.serialization.spi.ProxyServices;
-import org.jboss.weld.transaction.spi.TransactionServices;
-
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Trivial;
@@ -57,18 +46,27 @@ import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
 import com.ibm.ws.cdi.internal.interfaces.CDIUtils;
 import com.ibm.ws.cdi.internal.interfaces.TransactionService;
 import com.ibm.ws.cdi.internal.interfaces.WebSphereBeanDeploymentArchive;
-import com.ibm.ws.cdi.internal.interfaces.WebSphereCDIDeployment;
 import com.ibm.ws.cdi.internal.interfaces.WeldDevelopmentMode;
 import com.ibm.ws.cdi.liberty.ExtensionMetaData;
 import com.ibm.wsspi.injectionengine.InjectionException;
 import com.ibm.wsspi.injectionengine.ReferenceContext;
+
+import org.jboss.weld.bootstrap.WeldBootstrap;
+import org.jboss.weld.bootstrap.api.ServiceRegistry;
+import org.jboss.weld.bootstrap.api.helpers.SimpleServiceRegistry;
+import org.jboss.weld.bootstrap.spi.BeanDeploymentArchive;
+import org.jboss.weld.bootstrap.spi.BeansXml;
+import org.jboss.weld.bootstrap.spi.Metadata;
+import org.jboss.weld.manager.api.ExecutorServices;
+import org.jboss.weld.security.spi.SecurityServices;
+import org.jboss.weld.serialization.spi.ProxyServices;
+import org.jboss.weld.transaction.spi.TransactionServices;
 
 public class WebSphereCDIDeploymentImpl extends AbstractWebSphereCDIDeployment {
 
     private static final TraceComponent tc = Tr.register(WebSphereCDIDeploymentImpl.class);
 
     private final String id;
-    private final Map<String, WebSphereBeanDeploymentArchive> deploymentDBAs = new HashMap<String, WebSphereBeanDeploymentArchive>();
     private final Set<WebSphereBeanDeploymentArchive> applicationBDAs = new HashSet<WebSphereBeanDeploymentArchive>();
     private final Map<String, WebSphereBeanDeploymentArchive> extensionBDAs = new HashMap<String, WebSphereBeanDeploymentArchive>();
 
@@ -613,27 +611,6 @@ public class WebSphereCDIDeploymentImpl extends AbstractWebSphereCDIDeployment {
     public void addBeanDeploymentArchives(Set<WebSphereBeanDeploymentArchive> bdas) throws CDIException {
         for (WebSphereBeanDeploymentArchive bda : bdas) {
             addBeanDeploymentArchive(bda);
-        }
-    }
-
-    /**
-     * Scan all the BDAs in the deployment to see if there are any bean classes.
-     *
-     * This method must be called before scanForEjbEndpoints() and before we try to do
-     * any real work with the deployment or the BDAs
-     *
-     * @throws CDIException
-     */
-    @Override
-    public void scan() throws CDIException {
-        Collection<WebSphereBeanDeploymentArchive> allBDAs = new ArrayList<WebSphereBeanDeploymentArchive>(deploymentDBAs.values());
-        for (WebSphereBeanDeploymentArchive bda : allBDAs) {
-            bda.scanForBeanDefiningAnnotations(true);
-        }
-        for (WebSphereBeanDeploymentArchive bda : allBDAs) {
-            if (!bda.hasBeenScanned()) {
-                bda.scan();
-            }
         }
     }
 

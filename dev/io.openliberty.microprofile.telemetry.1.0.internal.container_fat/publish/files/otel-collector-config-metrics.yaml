@@ -1,0 +1,21 @@
+receivers:
+ otlp:
+   protocols:
+     grpc:
+
+exporters:
+ logging:
+
+processors:
+ batch:
+   timeout: 0s
+
+service:
+  telemetry:
+    logs:
+      level: "debug"
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]

@@ -18,6 +18,11 @@ import org.osgi.service.component.annotations.Component;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfoFactoryImpl;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.resources.ContainerResource;
+import io.opentelemetry.instrumentation.resources.HostResource;
+import io.opentelemetry.instrumentation.resources.OsResource;
+import io.opentelemetry.instrumentation.resources.ProcessResource;
+import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
@@ -53,6 +58,15 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
         telemetryProperties.put(OpenTelemetryConstants.ENV_METRICS_EXPORTER_PROPERTY, "none");
         telemetryProperties.put(OpenTelemetryConstants.ENV_LOGS_EXPORTER_PROPERTY, "none");
         return telemetryProperties;
+    }
+
+    @Override
+    public Resource mergeInOtelResources(Resource resource) {
+        return resource.merge(ContainerResource.get())
+                        .merge(HostResource.get())
+                        .merge(OsResource.get())
+                        .merge(ProcessResource.get())
+                        .merge(ProcessRuntimeResource.get());
     }
 
     /** {@inheritDoc} */

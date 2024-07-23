@@ -20,6 +20,14 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
+import org.apache.commons.lang3.concurrent.LazyInitializer;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.spi.ConfigSource;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.container.service.app.deploy.ApplicationInfo;
@@ -31,14 +39,6 @@ import com.ibm.ws.runtime.metadata.ApplicationMetaData;
 import com.ibm.ws.runtime.metadata.ComponentMetaData;
 import com.ibm.ws.runtime.metadata.MetaDataSlot;
 import com.ibm.ws.threadContext.ComponentMetaDataAccessorImpl;
-
-import org.apache.commons.lang3.concurrent.LazyInitializer;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
@@ -172,7 +172,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             if (!checkDisabled(telemetryProperties)) {
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
                     return openTelemetryVersionedConfiguration.buildOpenTelemetry(telemetryProperties,
-                                                                                  OpenTelemetryInfoFactoryImpl::customizeResource, Thread.currentThread().getContextClassLoader());
+                                                                                  this::customizeResource, Thread.currentThread().getContextClassLoader());
                 });
 
                 if (openTelemetry != null) {
@@ -350,7 +350,10 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     }
 
     //Adds the service name to the resource attributes
-    private static Resource customizeResource(Resource resource, ConfigProperties c) {
+    private Resource customizeResource(Resource resource, ConfigProperties c) {
+
+        resource = openTelemetryVersionedConfiguration.mergeInOtelResources(resource);
+
         ResourceBuilder builder = resource.toBuilder();
         builder.put(AttributeKey.stringKey("service.name"), getServiceName(c));
         return builder.build();
@@ -375,6 +378,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                                          ClassLoader classLoader);
 
         OpenTelemetry createServerOpenTelemetryInfo(HashMap<String, String> hashMap);
+
+        Resource mergeInOtelResources(Resource resource);
     }
 
     /*

@@ -9,24 +9,31 @@
  *******************************************************************************/
 package io.openliberty.microprofile.telemetry20.internal.config;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import org.apache.commons.lang3.SystemUtils;
+import org.osgi.service.component.annotations.Component;
+
+import com.ibm.websphere.kernel.server.ServerInfoMBean;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
-
-import org.osgi.service.component.annotations.Component;
+import com.ibm.ws.kernel.service.util.ServiceCaller;
 
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelemetryConstants;
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfoFactoryImpl;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
@@ -48,6 +55,8 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
 
     private static final String OS_BEAN_J9 = "com.ibm.lang.management.OperatingSystemMXBean";
     private static final String OS_BEAN_HOTSPOT = "com.sun.management.OperatingSystemMXBean";
+
+    private static final ServiceCaller<ServerInfoMBean> infoBeanCaller = new ServiceCaller<ServerInfoMBean>(OpenTelemetryVersionedConfigurationImpl.class, ServerInfoMBean.class);
 
     // Version specific API calls to AutoConfiguredOpenTelemetrySdk.builder()
     @Override
@@ -90,7 +99,7 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
-                    return buildOpenTelemetry(telemetryProperties, OpenTelemetryVersionedConfigurationImpl::customizeResource, classLoader);
+                    return buildOpenTelemetry(telemetryProperties, this::customizeResource, classLoader);
                 });
 
                 if (openTelemetry != null) {
@@ -122,9 +131,58 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
 
     }
 
-    private static Resource customizeResource(Resource resource, ConfigProperties c) {
+    //TODO We really need to de-deuplicate this code that is also in OpenTelemetryInfoFactoryImpl.
+    //But that will require also moving createServerOpenTelemetryInfo into the factory and I'm told
+    //Its here to work around a problem. Once we get everything working we need to come back and clean this up
+    @FFDCIgnore(UnknownHostException.class)
+    private Resource customizeResource(Resource resource, ConfigProperties c) {
         ResourceBuilder builder = resource.toBuilder();
-        builder.put(AttributeKey.stringKey("service.name"), OpenTelemetryConstants.OTEL_RUNTIME_INSTANCE_NAME);
+        builder.put(OpenTelemetryConstants.KEY_SERVICE_NAME, OpenTelemetryConstants.OTEL_RUNTIME_INSTANCE_NAME);
+
+        //TODO these are required, but its unclear how we'd get them. Especially in runtime mode!
+        //service.instance.id
+        builder.put(OpenTelemetryConstants.KEY_SERVICE_NAME, "unknown_service");
+
+        //TODO - do we provide container IDs? A quick check doesn't find Liberty acquiring them anywhere else
+        //container.id
+
+        // resources for HOST
+        builder.put(OpenTelemetryConstants.KEY_HOST_ARCH, System.getProperty("os.arch") + System.getProperty("sun.arch.data.model"));
+        try {
+            builder.put(OpenTelemetryConstants.KEY_HOST_NAME, InetAddress.getLocalHost().getHostName());
+        } catch (UnknownHostException e) {
+            builder.put(OpenTelemetryConstants.KEY_HOST_NAME, "Unkown");
+        }
+
+        // resources for OS
+        builder.put(OpenTelemetryConstants.KEY_OS_DESCRIPTION, SystemUtils.OS_VERSION); //TODO test if this is actually good
+        builder.put(OpenTelemetryConstants.KEY_OS_TYPE, SystemUtils.OS_NAME);
+
+        // //resources for java process
+        RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> commandLine = mxBean.getInputArguments();
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_COMMAND, commandLine.get(0));
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_COMMAND_ARGS, commandLine);
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_COMMAND_NAME, String.join(" ", commandLine));
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_OWNER, System.getProperty("user.name"));
+
+        //TODO see if I can find a reliable way to do this on java8
+        //        process.executable.path: Str(/opt/java/openjdk/bin/java)
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_PID, mxBean.getPid());
+        //TODO if possible add the parent PID.
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_RUNTIME_NAME, mxBean.getName());
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_RUNTIME_DESCRIPTION, mxBean.getVmVendor() + " " + mxBean.getVmName() + " " + mxBean.getVmVersion());
+        builder.put(OpenTelemetryConstants.KEY_PROCESS_RUNTIME_VERSION, mxBean.getVmVersion());
+
+        //Resources for Open Telemetry itself
+        builder.put(OpenTelemetryConstants.KEY_TELEMETRY_DISTRO_NAME, OpenTelemetryConstants.INSTRUMENTATION_NAME);
+
+        builder.put(OpenTelemetryConstants.KEY_TELEMETRY_VERSION, infoBeanCaller.call(ServerInfoMBean::getLibertyVersion).get());
+
+        // The following are provided automatically by the sdk
+        // telemetry.sdk.language
+        // telemetry.sdk.name
+        // telemetry.sdk.version
 
         return builder.build();
     }

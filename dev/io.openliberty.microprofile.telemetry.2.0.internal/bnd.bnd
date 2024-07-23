@@ -84,6 +84,8 @@ DynamicImport-Package: \
 	io.openliberty.io.opentelemetry.2.0;version=latest,\
 	io.opentelemetry.semconv:opentelemetry-semconv;version='1.25.0.alpha';strategy=exact,\
 	com.ibm.ws.kernel.boot.common;version=latest,\
-	io.openliberty.http.monitor
+	io.openliberty.http.monitor,\
+	com.ibm.ws.org.apache.commons.lang3,\
+	com.ibm.ws.kernel.service
 
 WS-TraceGroup: TELEMETRY

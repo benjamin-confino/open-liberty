@@ -12,6 +12,10 @@
  *******************************************************************************/
 package io.openliberty.microprofile.telemetry.internal.common.constants;
 
+import java.util.List;
+
+import io.opentelemetry.api.common.AttributeKey;
+
 public class OpenTelemetryConstants {
 
     public static final String ENV_DISABLE_PROPERTY = "OTEL_SDK_DISABLED";
@@ -41,4 +45,29 @@ public class OpenTelemetryConstants {
 
     //HTTP Metric units
     public static final String OTEL_SECONDS_UNIT = "s";
+
+    //// AttributeKeys for standard properties ////
+    public static final AttributeKey<String> KEY_CONTAINER_ID = AttributeKey.stringKey("container.id");
+
+    public static final AttributeKey<String> KEY_HOST_ARCH = AttributeKey.stringKey("host.arch");
+    public static final AttributeKey<String> KEY_HOST_NAME = AttributeKey.stringKey("host.name");
+
+    public static final AttributeKey<String> KEY_OS_DESCRIPTION = AttributeKey.stringKey("os.description");
+    public static final AttributeKey<String> KEY_OS_TYPE = AttributeKey.stringKey("os.type");
+
+    public static final AttributeKey<String> KEY_PROCESS_COMMAND = AttributeKey.stringKey("process.command");
+    public static final AttributeKey<List<String>> KEY_PROCESS_COMMAND_ARGS = AttributeKey.stringArrayKey("process.command_args");
+    public static final AttributeKey<String> KEY_PROCESS_COMMAND_NAME = AttributeKey.stringKey("process.command");
+    public static final AttributeKey<String> KEY_PROCESS_EXECUTABLE_PATH = AttributeKey.stringKey("process.executable.path");
+    public static final AttributeKey<Long> KEY_PROCESS_PID = AttributeKey.longKey("process.pid");
+    public static final AttributeKey<String> KEY_PROCESS_RUNTIME_DESCRIPTION = AttributeKey.stringKey("process.runtime.description");
+    public static final AttributeKey<String> KEY_PROCESS_RUNTIME_NAME = AttributeKey.stringKey("process.runtime.name");
+    public static final AttributeKey<String> KEY_PROCESS_RUNTIME_VERSION = AttributeKey.stringKey("process.runtime.version");
+    public static final AttributeKey<String> KEY_PROCESS_OWNER = AttributeKey.stringKey("process.owner");
+
+    public static final AttributeKey<String> KEY_SERVICE_INSTANCE_ID = AttributeKey.stringKey("service.instance.id");
+    public static final AttributeKey<String> KEY_SERVICE_NAME = AttributeKey.stringKey("service.name");
+
+    public static final AttributeKey<String> KEY_TELEMETRY_DISTRO_NAME = AttributeKey.stringKey("telemetry.distro.name");
+    public static final AttributeKey<String> KEY_TELEMETRY_VERSION = AttributeKey.stringKey("telemetry.distro.version");
 }

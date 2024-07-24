@@ -12,6 +12,8 @@
  *******************************************************************************/
 package io.openliberty.microprofile.telemetry.internal.common.constants;
 
+import io.opentelemetry.api.common.AttributeKey;
+
 public class OpenTelemetryConstants {
 
     public static final String ENV_DISABLE_PROPERTY = "OTEL_SDK_DISABLED";
@@ -41,4 +43,9 @@ public class OpenTelemetryConstants {
 
     //HTTP Metric units
     public static final String OTEL_SECONDS_UNIT = "s";
+
+    //Attribute Keys
+    //We're not pulling these from constants in semconv libraries because the import will be version specific
+    public static final AttributeKey<String> KEY_SERVICE_NAME = AttributeKey.stringKey("service.name");
+    public static final AttributeKey<String> KEY_SERVICE_INSTANCE_ID = AttributeKey.stringKey("service.instance.id");
 }

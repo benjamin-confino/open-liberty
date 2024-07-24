@@ -17,6 +17,7 @@ import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -45,7 +46,6 @@ import io.openliberty.microprofile.telemetry.internal.common.constants.OpenTelem
 import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryInfoFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.ResourceBuilder;
@@ -357,7 +357,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
         ResourceBuilder builder = resource.toBuilder();
 
         //Don't use ResourceAttributes.SERVICE_NAME due to semcov moving the class around
-        builder.put(AttributeKey.stringKey("service.name"), getServiceName(c));
+        builder.put(OpenTelemetryConstants.KEY_SERVICE_NAME, getServiceName(c));
+        builder.put(OpenTelemetryConstants.KEY_SERVICE_INSTANCE_ID, UUID.randomUUID().toString());
         return builder.build();
     }
 

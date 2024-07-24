@@ -24,16 +24,18 @@ import componenttest.annotation.Server;
 import componenttest.annotation.TestServlet;
 import componenttest.annotation.TestServlets;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.custom.junit.runner.Mode;
+import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.FATServletClient;
 import io.openliberty.microprofile.telemetry.internal_fat.apps.telemetry.ResourceServlet;
 
-//@Mode(TestMode.FULL)
+@Mode(TestMode.FULL)
 @RunWith(FATRunner.class)
 public class TelemetryAttributesTest extends FATServletClient {
 
-    public static final String SERVER_NAME = "Telemetry10Attributes";
+    public static final String SERVER_NAME = "Telemetry10ResourceAttributes";
     public static final String APP_NAME = "TelemetryResourcesApp";
 
     @Server(SERVER_NAME)

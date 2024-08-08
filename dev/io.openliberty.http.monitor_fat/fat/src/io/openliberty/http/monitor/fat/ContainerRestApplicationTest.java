@@ -32,6 +32,7 @@ import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.Server;
 import componenttest.containers.SimpleLogConsumer;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import jakarta.ws.rs.HttpMethod;
 
@@ -46,8 +47,13 @@ public class ContainerRestApplicationTest extends BaseTestClass {
 
     private static Class<?> c = ContainerRestApplicationTest.class;
 
-    @Server("ContainerRestServer")
+    private final static String SERVER_NAME = "ContainerRestServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
+
+    @ClassRule
+    public static RepeatTests r = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
@@ -63,9 +69,9 @@ public class ContainerRestApplicationTest extends BaseTestClass {
         WebArchive testWAR = ShrinkWrap
                         .create(WebArchive.class, "RestApp.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.restApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.restApp");
+
+        FATSuite.setTelProperties(testWAR, server);
 
         ShrinkHelper.exportDropinAppToServer(server, testWAR,
                                              DeployOptions.SERVER_ONLY);

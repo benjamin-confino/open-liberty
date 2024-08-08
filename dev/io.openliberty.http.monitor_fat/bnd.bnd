@@ -28,6 +28,33 @@ javac.target: 11
 
 fat.test.container.images: otel/opentelemetry-collector-contrib:0.103.0
 
+tested.features:\
+ restfulwsclient-4.0,\
+ restfulws-4.0,\
+ mpmetrics-5.1,\
+ cdi-4.1,\
+ restfulwsclient-3.0,\
+ servlet-5.0,\
+ concurrent-2.0,\
+ mpmetrics-4.0,\
+ restfulws-3.0,\
+ jsonp-2.0,\
+ cdi-3.0,\
+ appsecurity-2.0,\
+ servlet-3.1,\
+ mpconfig-1.2,\
+ cdi-1.2,\
+ jaxrs-2.0,\
+ mpmetrics-1.1,\
+ jaxrsclient-2.0,\
+ mpconfig-2.0,\
+ servlet-4.0,\
+ mpmetrics-3.0,\
+ cdi-2.0,\
+ jsonp-1.1,\
+ jaxrsclient-2.1,\
+ jaxrs-2.1
+
 -buildpath: \
 	com.ibm.ws.webcontainer.servlet.4.0.jakarta,\
 	io.openliberty.jakarta.servlet.6.0;version=latest,\
@@ -36,4 +63,5 @@ fat.test.container.images: otel/opentelemetry-collector-contrib:0.103.0
 	io.openliberty.jakarta.annotation.2.1;version=latest,\
 	io.openliberty.jakarta.restfulWS.3.0;version=latest,\
 	io.openliberty.jakarta.cdi.4.0;version=latest,\
-	io.openliberty.org.testcontainers;version=latest
+	io.openliberty.org.testcontainers;version=latest,\
+	io.openliberty.microprofile.telemetry.internal_fat.common

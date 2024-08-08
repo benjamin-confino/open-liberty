@@ -25,6 +25,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import componenttest.annotation.Server;
 import componenttest.containers.SimpleLogConsumer;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import jakarta.ws.rs.HttpMethod;
 
@@ -36,8 +37,13 @@ public class ContainerNoAppTest extends BaseTestClass {
 
     private static Class<?> c = ContainerNoAppTest.class;
 
-    @Server("ContainerJustServer")
+    private final static String SERVER_NAME = "ContainerJustServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
+
+    @ClassRule
+    public static RepeatTests r = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()

@@ -8,7 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 
-
+dependencies {
+  requiredLibs project(':io.openliberty.microprofile.telemetry.internal_fat.common')
+}
 
 assemble.doLast {
     // update the generated-src dir with the new stubs that have been generated

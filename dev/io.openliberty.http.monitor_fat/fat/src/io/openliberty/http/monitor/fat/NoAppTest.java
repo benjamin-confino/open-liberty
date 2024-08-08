@@ -13,11 +13,13 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import jakarta.ws.rs.HttpMethod;
 
@@ -29,8 +31,13 @@ public class NoAppTest extends BaseTestClass {
 
     private static Class<?> c = NoAppTest.class;
 
-    @Server("SimpleRestServer")
+    private static final String SERVER_NAME = "SimpleRestServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
+
+    @ClassRule
+    public static RepeatTests r = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @BeforeClass
     public static void beforeClass() throws Exception {

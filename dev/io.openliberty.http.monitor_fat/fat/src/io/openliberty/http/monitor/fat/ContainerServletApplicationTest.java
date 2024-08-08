@@ -31,6 +31,7 @@ import componenttest.annotation.AllowedFFDC;
 import componenttest.annotation.Server;
 import componenttest.containers.SimpleLogConsumer;
 import componenttest.custom.junit.runner.FATRunner;
+import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import jakarta.ws.rs.HttpMethod;
 
@@ -42,8 +43,13 @@ public class ContainerServletApplicationTest extends BaseTestClass {
 
     private static Class<?> c = ContainerServletApplicationTest.class;
 
-    @Server("ContainerServletServer")
+    private final static String SERVER_NAME = "ContainerServletServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
+
+    @ClassRule
+    public static RepeatTests r = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
@@ -59,16 +65,16 @@ public class ContainerServletApplicationTest extends BaseTestClass {
         WebArchive simpleSerletWAR = ShrinkWrap
                         .create(WebArchive.class, "ServletApp.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.servletApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.servletApp");
+
+        FATSuite.setTelProperties(simpleSerletWAR, server);
 
         WebArchive wildCardServletWAR = ShrinkWrap
                         .create(WebArchive.class, "WildCardServlet.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.wildCardServletApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.wildCardServletApp");
+
+        FATSuite.setTelProperties(wildCardServletWAR, server);
 
         ShrinkHelper.exportDropinAppToServer(server, simpleSerletWAR,
                                              DeployOptions.SERVER_ONLY);

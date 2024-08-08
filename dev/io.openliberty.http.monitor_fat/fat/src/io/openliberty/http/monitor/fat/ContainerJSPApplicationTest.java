@@ -40,11 +40,13 @@ public class ContainerJSPApplicationTest extends BaseTestClass {
 
     private static Class<?> c = ContainerJSPApplicationTest.class;
 
-    @Server("ContainerJSPServer")
+    private static final String SERVER_NAME = "ContainerJSPServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
 
     @ClassRule
-    public static RepeatTests rt = FATSuite.testRepeatMPTel20("ContainerJSPServer");
+    public static RepeatTests rt = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
@@ -64,10 +66,9 @@ public class ContainerJSPApplicationTest extends BaseTestClass {
                         .add(new FileAsset(new File("test-applications/JspApp/resource/unconfigured.jsp")), "/unconfigured.jsp")
                         .add(new FileAsset(new File("test-applications/JspApp/resource/default.html")), "/default.html")
                         .add(new FileAsset(new File("test-applications/JspApp/resource/Testhtml.html")), "Testhtml.html")
-                        .addPackage(
-                                    "io.openliberty.http.monitor.fat.jspApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                        .addPackage("io.openliberty.http.monitor.fat.jspApp");
+
+        testWAR = FATSuite.setTelProperties(testWAR, server);
 
         // test-applications\JspApp\src\io\openliberty\http\monitor\fat\jspApp\resource
         ShrinkHelper.exportDropinAppToServer(server, testWAR,

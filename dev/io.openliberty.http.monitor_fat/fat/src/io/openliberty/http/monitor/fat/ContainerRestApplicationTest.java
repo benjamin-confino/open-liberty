@@ -48,11 +48,13 @@ public class ContainerRestApplicationTest extends BaseTestClass {
 
     private static Class<?> c = ContainerRestApplicationTest.class;
 
-    @Server("ContainerRestServer")
+    private static final String SERVER_NAME = "ContainerJSPServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
 
     @ClassRule
-    public static RepeatTests rt = FATSuite.testRepeatMPTel20("ContainerRestServer");
+    public static RepeatTests rt = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
@@ -68,9 +70,9 @@ public class ContainerRestApplicationTest extends BaseTestClass {
         WebArchive testWAR = ShrinkWrap
                         .create(WebArchive.class, "RestApp.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.restApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.restApp");
+
+        testWAR = FATSuite.setTelProperties(testWAR, server);
 
         ShrinkHelper.exportDropinAppToServer(server, testWAR,
                                              DeployOptions.SERVER_ONLY);

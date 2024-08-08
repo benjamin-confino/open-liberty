@@ -43,11 +43,13 @@ public class ContainerServletApplicationTest extends BaseTestClass {
 
     private static Class<?> c = ContainerServletApplicationTest.class;
 
-    @Server("ContainerServletServer")
+    private static final String SERVER_NAME = "ContainerJSPServer";
+
+    @Server(SERVER_NAME)
     public static LibertyServer server;
 
     @ClassRule
-    public static RepeatTests rt = FATSuite.testRepeatMPTel20("ContainerServletServer");
+    public static RepeatTests rt = FATSuite.allMPRepeatsWithMPTel20OrLater(SERVER_NAME);
 
     @ClassRule
     public static GenericContainer<?> container = new GenericContainer<>(new ImageFromDockerfile()
@@ -63,16 +65,16 @@ public class ContainerServletApplicationTest extends BaseTestClass {
         WebArchive simpleSerletWAR = ShrinkWrap
                         .create(WebArchive.class, "ServletApp.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.servletApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.servletApp");
+
+        simpleSerletWAR = FATSuite.setTelProperties(simpleSerletWAR, server);
 
         WebArchive wildCardServletWAR = ShrinkWrap
                         .create(WebArchive.class, "WildCardServlet.war")
                         .addPackage(
-                                    "io.openliberty.http.monitor.fat.wildCardServletApp")
-                        .addAsManifestResource(new File("publish/resources/META-INF/microprofile-config.properties"),
-                                               "microprofile-config.properties");
+                                    "io.openliberty.http.monitor.fat.wildCardServletApp");
+
+        wildCardServletWAR = FATSuite.setTelProperties(wildCardServletWAR, server);
 
         ShrinkHelper.exportDropinAppToServer(server, simpleSerletWAR,
                                              DeployOptions.SERVER_ONLY);

@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -15,18 +15,17 @@ package io.openliberty.microprofile.openapi40.internal.services.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.Function;
 
 import org.eclipse.microprofile.openapi.OASConfig;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+
+import com.ibm.ws.kernel.productinfo.ProductInfo;
 
 import io.openliberty.microprofile.openapi20.internal.services.ConfigField;
 import io.openliberty.microprofile.openapi20.internal.services.ConfigFieldProvider;
@@ -36,7 +35,7 @@ import io.smallrye.openapi.api.OpenApiConfig.DuplicateOperationIdBehavior;
 import io.smallrye.openapi.api.OpenApiConfig.OperationIdStrategy;
 import io.smallrye.openapi.api.SmallRyeOASConfig;
 
-@Component(configurationPolicy = ConfigurationPolicy.IGNORE)
+@Component(configurationPolicy = ConfigurationPolicy.IGNORE, configurationPid = "io.openliberty.microprofile.openapi")
 public class ConfigFieldProvider40Impl implements ConfigFieldProvider {
 
     // Package protected for unit testing
@@ -60,7 +59,7 @@ public class ConfigFieldProvider40Impl implements ConfigFieldProvider {
         PROPERTY_NAMING_STRATEGY("propertyNamingStrategy", SmallRyeOASConfig.SMALLRYE_PROPERTY_NAMING_STRATEGY, OpenApiConfig::propertyNamingStrategy),
         SORTED_PROPERTIES_ENABLE("sortedPropertiesEnable", SmallRyeOASConfig.SMALLRYE_SORTED_PROPERTIES_ENABLE, c -> Boolean.toString(c.sortedPropertiesEnable())),
         SCHEMAS("getSchemas", "mp.openapi.schema.*", c -> ConfigField.serializeMap(c.getSchemas())),
-        OPEN_API_VERSION("getOpenApiVersion", SmallRyeOASConfig.VERSION, OpenApiConfig::getOpenApiVersion),
+        OPEN_API_VERSION("getOpenApiVersion", SmallRyeOASConfig.VERSION, (OpenApiConfig config) -> getOpenAPIVersion(config)),
         INFO_TITLE("getInfoTitle", SmallRyeOASConfig.INFO_TITLE, OpenApiConfig::getInfoTitle),
         INFO_VERSION("getInfoVersion", SmallRyeOASConfig.INFO_VERSION, OpenApiConfig::getInfoVersion),
         INFO_DESCRIPTION("getInfoDescription", SmallRyeOASConfig.INFO_DESCRIPTION, OpenApiConfig::getInfoDescription),
@@ -123,6 +122,34 @@ public class ConfigFieldProvider40Impl implements ConfigFieldProvider {
         @Override
         public String getProperty() {
             return propertyName;
+        }
+
+        private static String getOpenAPIVersion(OpenApiConfig config) {
+            if (!ProductInfo.getBetaEdition() || openAPIVersion == null) {
+                return config.getOpenApiVersion();
+            }
+            return openAPIVersion;
+        }
+    }
+
+    private static final String OPEN_API_VERSION_PROPERTY_NAME = "openApiVersion";
+    private static String openAPIVersion;
+
+    @Activate
+    protected void activate(BundleContext context, Map<String, Object> properties) {
+        String versionFromServerXml = (String) properties.get(OPEN_API_VERSION_PROPERTY_NAME);
+
+        if (versionFromServerXml == null) {
+            openAPIVersion = null;
+        } else {
+
+            if (!(openAPIVersion.equals("3.0") || openAPIVersion.equals("3.1"))) {
+                //TODO check if Andrew meant this by "error should be reported" or Tr.Error and fallback to config.getOpenApiVersion().
+                //TODO regardless of the above, translations.
+                throw new IllegalStateException("OpenAPIVersion was defined as " + versionFromServerXml + " in the server.xml. Valid values are 3.0 and 3.1");
+            }
+
+            openAPIVersion = versionFromServerXml.strip(); //Tolerate whitespace
         }
     }
 

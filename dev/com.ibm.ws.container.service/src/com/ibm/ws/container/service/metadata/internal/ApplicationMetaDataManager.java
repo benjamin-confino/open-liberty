@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -15,6 +15,7 @@ package com.ibm.ws.container.service.metadata.internal;
 import com.ibm.ws.container.service.metadata.ApplicationMetaDataListener;
 import com.ibm.ws.container.service.metadata.MetaDataEvent;
 import com.ibm.ws.container.service.metadata.MetaDataException;
+import com.ibm.ws.container.service.prototpye.test.pkg.ApplicationKeyServiceImpl;
 import com.ibm.ws.runtime.metadata.ApplicationMetaData;
 
 class ApplicationMetaDataManager extends MetaDataManager<ApplicationMetaData, ApplicationMetaDataListener> {
@@ -30,10 +31,17 @@ class ApplicationMetaDataManager extends MetaDataManager<ApplicationMetaData, Ap
     @Override
     public void fireMetaDataCreated(ApplicationMetaDataListener listener, MetaDataEvent<ApplicationMetaData> event) throws MetaDataException {
         listener.applicationMetaDataCreated(event);
+        ApplicationKeyServiceImpl.horribleTestHack(event);
     }
 
     @Override
     public void fireMetaDataDestroyed(ApplicationMetaDataListener listener, MetaDataEvent<ApplicationMetaData> event) {
         listener.applicationMetaDataDestroyed(event);
+
+        try {
+            ApplicationKeyServiceImpl.horribleTestHackTwo(event);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

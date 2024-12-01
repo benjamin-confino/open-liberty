@@ -13,11 +13,15 @@
 package com.ibm.ws.annocache.targets.cache.internal;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 import com.ibm.websphere.ras.annotation.Trivial;
+import com.ibm.ws.annocache.targets.cache.internal.ApplicationKeyService.AppKey;
+import com.ibm.ws.kernel.service.util.ServiceCaller;
 import com.ibm.wsspi.annocache.classsource.ClassSource_Factory;
 import com.ibm.wsspi.annocache.targets.cache.TargetCache_ExternalConstants;
+import com.ibm.wsspi.annocache.targets.cache.TargetCache_Options;
 
 /**
  * Root of annotation caching data.
@@ -49,7 +53,9 @@ import com.ibm.wsspi.annocache.targets.cache.TargetCache_ExternalConstants;
 public class TargetCacheImpl_DataApps extends TargetCacheImpl_DataBase {
     // private static final String CLASS_NAME = TargetCacheImpl_DataApps.class.getSimpleName();
 
-    //
+        private static final ServiceCaller<ApplicationKeyService> keyServiceServiceCaller = new ServiceCaller<ApplicationKeyService>(TargetCacheImpl_DataApps.class,
+                        ApplicationKeyService.class);
+
 
 	/**
 	 * Create new root cache data.
@@ -74,7 +80,7 @@ public class TargetCacheImpl_DataApps extends TargetCacheImpl_DataBase {
                new File( factory.getCacheOptions().getDir() ) );
 
         this.appsLock = new AppsLock();
-        this.apps = new WeakHashMap<String, TargetCacheImpl_DataApp>();
+        this.apps = new WeakHashMap<AppKey, TargetCacheImpl_DataApp>();
 
         this.queriesLock = new QueriesLock();
         this.queries = new WeakHashMap<String, TargetCacheImpl_DataQueries>();
@@ -152,7 +158,7 @@ public class TargetCacheImpl_DataApps extends TargetCacheImpl_DataBase {
         // EMPTY
     }
     private final AppsLock appsLock;
-    private final WeakHashMap<String, TargetCacheImpl_DataApp> apps;
+    private final WeakHashMap<AppKey, TargetCacheImpl_DataApp> apps;
 
     /**
      * Obtain cache data for an application.
@@ -173,10 +179,11 @@ public class TargetCacheImpl_DataApps extends TargetCacheImpl_DataBase {
         }
 
         synchronized( appsLock ) {
+            AppKey key = keyServiceServiceCaller.run((ApplicationKeyService ks) -> ks.getKeyForApp(appName)).get();
             TargetCacheImpl_DataApp app = apps.get(appName);
             if ( app == null ) {
                 app = createAppData(appName);
-                apps.put(appName, app);
+                apps.put(key, app);
             }
             return app;
         }

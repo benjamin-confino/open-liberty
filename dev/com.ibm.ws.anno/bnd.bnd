@@ -46,8 +46,7 @@ Export-Package: \
  com.ibm.ws.annocache.targets.internal.AnnotationTargetsImpl_Factory, \
  com.ibm.ws.annocache.targets.cache.internal.TargetCacheImpl_Factory, \
  com.ibm.ws.annocache.classsource.internal.ClassSourceImpl_Factory, \
- com.ibm.ws.annocache.util.internal.UtilImpl_Factory, \
- com.ibm.ws.annocache.targets.cache.internal.ApplicationKeyServiceImpl
+ com.ibm.ws.annocache.util.internal.UtilImpl_Factory
 
 WS-TraceGroup: com.ibm.ws.anno
 
@@ -67,8 +66,7 @@ instrument.classesExcludes: \
 	com.ibm.websphere.org.osgi.core;version=latest,\
 	com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
 	com.ibm.ws.kernel.security.thread;version=latest,\
-	org.eclipse.osgi;version=latest,\
-	com.ibm.ws.container.service
+	org.eclipse.osgi;version=latest
 
 -testpath: \
 	../build.sharedResources/lib/junit/old/junit.jar;version=file, \

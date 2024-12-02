@@ -53,7 +53,8 @@ Export-Package: \
    com.ibm.ws.util.dopriv, \
    com.ibm.wsspi.runtime;provide:=true, \
    com.ibm.ws.xml, \
-   com.ibm.ws.URL
+   com.ibm.ws.URL, \
+   com.ibm.ws.container.service.prototpye.test.pkg
 
 Import-Package: \
     !com.ibm.ws.container.service.naming, \

@@ -17,11 +17,13 @@ import java.util.Optional;
 import java.util.WeakHashMap;
 
 import com.ibm.websphere.ras.annotation.Trivial;
-import com.ibm.ws.annocache.targets.cache.internal.ApplicationKeyService.AppKey;
 import com.ibm.ws.kernel.service.util.ServiceCaller;
 import com.ibm.wsspi.annocache.classsource.ClassSource_Factory;
+import com.ibm.wsspi.annocache.targets.cache.ApplicationKeyService;
+import com.ibm.wsspi.annocache.targets.cache.ApplicationKeyServiceImpl;
 import com.ibm.wsspi.annocache.targets.cache.TargetCache_ExternalConstants;
 import com.ibm.wsspi.annocache.targets.cache.TargetCache_Options;
+import com.ibm.wsspi.annocache.targets.cache.ApplicationKeyService.AppKey;
 
 /**
  * Root of annotation caching data.
@@ -179,7 +181,8 @@ public class TargetCacheImpl_DataApps extends TargetCacheImpl_DataBase {
         }
 
         synchronized( appsLock ) {
-            AppKey key = keyServiceServiceCaller.run((ApplicationKeyService ks) -> ks.getKeyForApp(appName)).get();
+            //AppKey key = keyServiceServiceCaller.run((ApplicationKeyService ks) -> ks.getKeyForApp(appName)).get();
+            AppKey key = ApplicationKeyServiceImpl.horribleTestHackThree(appName);
             TargetCacheImpl_DataApp app = apps.get(appName);
             if ( app == null ) {
                 app = createAppData(appName);

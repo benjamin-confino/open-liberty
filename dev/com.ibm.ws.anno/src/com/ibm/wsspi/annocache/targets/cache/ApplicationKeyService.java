@@ -1,4 +1,4 @@
-package com.ibm.ws.annocache.targets.cache.internal;
+package com.ibm.wsspi.annocache.targets.cache;
 
 import java.util.Optional;
 

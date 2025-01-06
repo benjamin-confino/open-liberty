@@ -1565,6 +1565,11 @@ public class LibertyServer implements LogMonitorClient {
                                              String serverCmd, List<String> args,
                                              boolean validateTimedExit) throws Exception {
         final String method = "startServerWithArgs";
+
+        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+            Log.info(c, method, ste + "\n");
+        }
+
         Log.info(c, method, ">>> STARTING SERVER: " + getServerName());
         Log.info(c, method,
                  "Starting " + getServerName() + "; preClean=" + preClean + ", clean=" + cleanStart + ", validateApps=" + useValidateApps + ", expectStartFailure="

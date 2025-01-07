@@ -83,10 +83,11 @@ public class AnnotationScanInJarTest extends FATServletClient {
 		server.startServer();
 	}
 
-	@AfterClass
-	public static void tearDown() throws Exception {
-		server.stopServer();
-	}
+// recreateing the bug
+//	@AfterClass
+//	public static void tearDown() throws Exception {
+//		server.stopServer();
+//	}
 
 
 	@Test

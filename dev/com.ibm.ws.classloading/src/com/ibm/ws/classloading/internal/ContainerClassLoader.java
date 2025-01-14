@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassDefinition;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -1082,6 +1083,10 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         final Map<Integer, List<UniversalContainer>> packageMap = usePackageMap ? new HashMap<Integer, List<UniversalContainer>>() : null;
 
         final Set<Container> containers = Collections.newSetFromMap(new WeakHashMap<Container, Boolean>());
+        
+        public Set<Container> getContainers(){
+            return containers;
+        }
 
         /**
          * Internal method to add a new UniversalContainer to the list.
@@ -1149,7 +1154,8 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
             addUniversalContainers(new ArtifactContainerUniversalContainer(container));
         }
 
-        private List<UniversalContainer> getUniversalContainersForPath(String path, List<UniversalContainer> classpath) {
+        //For prototyping only! Don't deliver this change without approval.
+        public List<UniversalContainer> getUniversalContainersForPath(String path, List<UniversalContainer> classpath) {
             //if we have outstanding requests, then we should just use the classpath, else
             //we risk not seeing content on the classpath that we should see.
             if (outstandingContainers.get() > 0) {
@@ -1391,6 +1397,10 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         UnreadSmartClassPath() {
             delegate = new SmartClassPathImpl();
         }
+        
+        public Set<Container> getContainers(){
+            return delegate.getContainers();
+        }
 
         @Override
         public void addContainer(Container container) {
@@ -1418,6 +1428,10 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         public synchronized Collection<URL> getResourceURLs(String path, String jarProtocol) {
             unwrap();
             return delegate.getResourceURLs(path, jarProtocol);
+        }
+        
+        public List getUniversalContainersForPath(String s, List l) {
+            return delegate.getUniversalContainersForPath(s, l);
         }
 
         private void unwrap() {
@@ -1568,6 +1582,27 @@ abstract class ContainerClassLoader extends LibertyLoader implements Keyed<Class
         }
 
         return url;
+    }
+    
+    public Set<Container> dirtyHack() {
+        UnreadSmartClassPath impl = (UnreadSmartClassPath) smartClassPath;
+        Set<Container> containers = impl.getContainers();
+        
+        try {
+            
+            Field[] a = parent.getClass().getSuperclass().getDeclaredFields();
+            
+            Field f = parent.getClass().getSuperclass().getDeclaredField("smartClassPath");
+            f.setAccessible(true);
+            impl = (UnreadSmartClassPath) f.get(parent);
+            
+            containers.addAll(impl.getContainers());
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        return containers;
     }
 
     @Override

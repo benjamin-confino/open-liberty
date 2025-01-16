@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -13,23 +13,18 @@
 package com.ibm.ws.container.service.annocache.internal;
 
 import com.ibm.websphere.ras.Tr;
-
-import com.ibm.wsspi.artifact.ArtifactContainer;
-import com.ibm.wsspi.artifact.overlay.OverlayContainer;
-
-import com.ibm.wsspi.adaptable.module.Container;
-import com.ibm.wsspi.adaptable.module.NonPersistentCache;
-import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
-
-import com.ibm.wsspi.annocache.classsource.ClassSource_Factory;
-
+import com.ibm.ws.container.service.annocache.ModuleAnnotations;
 import com.ibm.ws.container.service.app.deploy.ApplicationClassesContainerInfo;
 import com.ibm.ws.container.service.app.deploy.ApplicationInfo;
 import com.ibm.ws.container.service.app.deploy.ContainerInfo;
 import com.ibm.ws.container.service.app.deploy.ModuleClassesContainerInfo;
 import com.ibm.ws.container.service.app.deploy.ModuleInfo;
-
-import com.ibm.ws.container.service.annocache.ModuleAnnotations;
+import com.ibm.wsspi.adaptable.module.Container;
+import com.ibm.wsspi.adaptable.module.NonPersistentCache;
+import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
+import com.ibm.wsspi.annocache.classsource.ClassSource_Factory;
+import com.ibm.wsspi.artifact.ArtifactContainer;
+import com.ibm.wsspi.artifact.overlay.OverlayContainer;
 
 /*
  * Web module annotation service implementation.
@@ -143,7 +138,7 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
         ApplicationInfo appInfo = moduleInfo.getApplicationInfo();
         String appName = appInfo.getName();
         String appDepName = appInfo.getDeploymentName();
-        if ( tc.isDebugEnabled() ) {
+        if (tc.isDebugEnabled()) {
             Tr.debug(tc, methodName + ": AppName [ " + appName + " ] AppDepName [ " + appDepName + " ] (using AppDepName)");
         }
 
@@ -153,15 +148,12 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
     }
 
     public ModuleAnnotationsImpl(
-        AnnotationsAdapterImpl annotationsAdapter,
-        Container rootContainer, OverlayContainer rootOverlayContainer,
-        ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
-        ModuleInfo moduleInfo) throws UnableToAdaptException {
+                                 AnnotationsAdapterImpl annotationsAdapter,
+                                 Container rootContainer, OverlayContainer rootOverlayContainer,
+                                 ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
+                                 ModuleInfo moduleInfo) throws UnableToAdaptException {
 
-        this( annotationsAdapter,
-              rootContainer, rootOverlayContainer,
-              rootArtifactContainer, rootAdaptableContainer,
-              moduleInfo, ClassSource_Factory.UNSET_CATEGORY_NAME );
+        this(annotationsAdapter, rootContainer, rootOverlayContainer, rootArtifactContainer, rootAdaptableContainer, moduleInfo, ClassSource_Factory.UNSET_CATEGORY_NAME);
     }
 
 //    public void debug(String text) {
@@ -174,19 +166,14 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
 
     @SuppressWarnings("unused")
     public ModuleAnnotationsImpl(
-        AnnotationsAdapterImpl annotationsAdapter,
-        Container rootContainer, OverlayContainer rootOverlayContainer,
-        ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
-        ModuleInfo moduleInfo, String modCatName) throws UnableToAdaptException {
+                                 AnnotationsAdapterImpl annotationsAdapter,
+                                 Container rootContainer, OverlayContainer rootOverlayContainer,
+                                 ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
+                                 ModuleInfo moduleInfo, String modCatName) throws UnableToAdaptException {
 
-        super( annotationsAdapter,
-               rootContainer, rootOverlayContainer,
-               rootArtifactContainer, rootAdaptableContainer,
-               ModuleAnnotationsImpl.getAppName(moduleInfo),
-               !ClassSource_Factory.IS_UNNAMED_MOD,
-               moduleInfo.getName(),
-               // AnnotationsImpl.getPath( moduleInfo.getContainer() ), // 'getPath' throws UnableToAdaptException
-               modCatName );
+        super(annotationsAdapter, rootContainer, rootOverlayContainer, rootArtifactContainer, rootAdaptableContainer, ModuleAnnotationsImpl.getAppName(moduleInfo), !ClassSource_Factory.IS_UNNAMED_MOD, moduleInfo.getName(),
+              // AnnotationsImpl.getPath( moduleInfo.getContainer() ), // 'getPath' throws UnableToAdaptException
+              modCatName);
 
         this.moduleInfo = moduleInfo;
 //        debug("Module info", this.moduleInfo);
@@ -196,7 +183,7 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
 //        debug("Module info container", this.moduleInfo.getContainer());
 
         this.classLoader = moduleInfo.getClassLoader();
-        
+
         this.appInfo = moduleInfo.getApplicationInfo();
 //        debug("App info", this.appInfo);
 //        debug("App info class", this.appInfo.getClass().getName());
@@ -239,7 +226,7 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
     /**
      * Override: Retrieve the 'useJandex' setting from
      * the application information.
-     * 
+     *
      * @return True or false telling if Jandex indexes are to be read.
      */
     @Override
@@ -254,22 +241,21 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
         try {
             cache = getAppContainer().adapt(NonPersistentCache.class);
             // 'adapt' throws UnableToAdaptException
-        } catch ( UnableToAdaptException e ) {
+        } catch (UnableToAdaptException e) {
             return null; // FFDC
         }
-        ApplicationClassesContainerInfo appClassesInfo = (ApplicationClassesContainerInfo)
-            cache.getFromCache(ApplicationClassesContainerInfo.class);
+        ApplicationClassesContainerInfo appClassesInfo = (ApplicationClassesContainerInfo) cache.getFromCache(ApplicationClassesContainerInfo.class);
 
         // AppClassesInfo -> { ModuleClassesInfo -> { ContainerInfo -> Container } }
         // Find the module classes information which has a container which is the
         // same as the module container.
 
-        for ( ModuleClassesContainerInfo moduleClassesInfo : appClassesInfo.getModuleClassesContainerInfo() ) {
-            for ( ContainerInfo containerInfo : moduleClassesInfo.getClassesContainerInfo() ) {
-                if ( containerInfo.getType() == ContainerInfo.Type.MANIFEST_CLASSPATH ) {
+        for (ModuleClassesContainerInfo moduleClassesInfo : appClassesInfo.getModuleClassesContainerInfo()) {
+            for (ContainerInfo containerInfo : moduleClassesInfo.getClassesContainerInfo()) {
+                if (containerInfo.getType() == ContainerInfo.Type.MANIFEST_CLASSPATH) {
                     continue;
                 }
-                if ( !containerInfo.getContainer().equals(container) ) {
+                if (!containerInfo.getContainer().equals(container)) {
                     continue;
                 }
                 return moduleClassesInfo;
@@ -283,31 +269,31 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
 
     @Override
     protected void addInternalToClassSource() {
-        if ( rootClassSource == null ) {
+        if (rootClassSource == null) {
             return; // Nothing yet to do.
         }
 
         ClassSource_Factory classSourceFactory = getClassSourceFactory();
-        if ( classSourceFactory == null ) {
+        if (classSourceFactory == null) {
             return;
         }
 
         Container moduleContainer = getContainer();
 
         Tr.debug(tc, CLASS_NAME +
-             ": Module [ " + getAppName() + ":" + getModName() + " ][ " + moduleContainer + " ]:" +
-             " Building internal class sources");
+                     ": Module [ " + getAppName() + ":" + getModName() + " ][ " + moduleContainer + " ]:" +
+                     " Building internal class sources");
 
         ModuleClassesContainerInfo moduleClassesContainerInfo = getModuleClassesContainerInfo();
 
-        if ( moduleClassesContainerInfo == null ) {
+        if (moduleClassesContainerInfo == null) {
             // Tr.info(tc, CLASS_NAME + ": No classes container info: Using the module container.");
 
             String containerPath = getContainerPath(moduleContainer);
-            if ( containerPath == null ) {
+            if (containerPath == null) {
                 return; // FFDC in 'getContainerPath'
             }
-            if ( !addContainerClassSource(containerPath, moduleContainer) ) {
+            if (!addContainerClassSource(containerPath, moduleContainer)) {
                 return; // FFDC in 'addContainerClassSource'
             }
 
@@ -327,13 +313,13 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
             //   RAR_MODULE: Normal; should be a root container
             //   JAR_MODULE: ?? Maybe, a JAR in a RAR module
 
-            for ( ContainerInfo nextInfo : moduleClassesContainerInfo.getClassesContainerInfo() ) {
+            for (ContainerInfo nextInfo : moduleClassesContainerInfo.getClassesContainerInfo()) {
                 Container nextContainer = nextInfo.getContainer();
                 ContainerInfo.Type nextType = nextInfo.getType();
 
-                if ( (nextType == ContainerInfo.Type.MANIFEST_CLASSPATH) ||
-                     (nextType == ContainerInfo.Type.EAR_LIB) ||
-                     (nextType == ContainerInfo.Type.SHARED_LIB) ) {
+                if ((nextType == ContainerInfo.Type.MANIFEST_CLASSPATH) ||
+                // (nextType == ContainerInfo.Type.EAR_LIB) ||
+                    (nextType == ContainerInfo.Type.SHARED_LIB)) {
 
                     // While manifest class path entries, EAR libraries, and shared libraries
                     // can be on a module's class path, none of these is ever scanned directly,
@@ -344,7 +330,7 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
                     Tr.debug(tc, "Ignoring container [ " + nextContainer + " ] [ " + nextType + " ]");
                     continue;
 
-                } else if ( nextType == ContainerInfo.Type.WEB_MODULE ) {
+                } else if (nextType == ContainerInfo.Type.WEB_MODULE) {
                     // A web module should never be specified itself as a classes container.
 
                     Tr.warning(tc, "Ignoring container [ " + nextContainer + " ] [ " + nextType + " ]: " +
@@ -354,22 +340,23 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
 
                 String nextPrefix;
 
-                if ( nextType == ContainerInfo.Type.WEB_INF_CLASSES ) {
+                if (nextType == ContainerInfo.Type.WEB_INF_CLASSES) {
                     // Handle WEB-INF/classes by providing the module container and a prefix for
                     // locating the WEB-INF/classes folder.  The module container is provided to
                     // give the annotations visibility to META-INF, which is where jandex indexes
                     // are stored.
 
-                    nextContainer  = nextContainer.getEnclosingContainer().getEnclosingContainer();
+                    nextContainer = nextContainer.getEnclosingContainer().getEnclosingContainer();
                     nextPrefix = "WEB-INF/classes/";
 
                     Tr.debug(tc, CLASS_NAME + ": Handling type [ " + nextType + " ] with prefix [ " + nextPrefix + " ]");
 
-                } else if ( (nextType == ContainerInfo.Type.WEB_INF_LIB) ||
-                            (nextType == ContainerInfo.Type.EJB_MODULE) ||
-                            (nextType == ContainerInfo.Type.CLIENT_MODULE) ||
-                            (nextType == ContainerInfo.Type.RAR_MODULE) ||
-                            (nextType == ContainerInfo.Type.JAR_MODULE) ) {
+                } else if ((nextType == ContainerInfo.Type.WEB_INF_LIB) ||
+                           (nextType == ContainerInfo.Type.EJB_MODULE) ||
+                           (nextType == ContainerInfo.Type.CLIENT_MODULE) ||
+                           (nextType == ContainerInfo.Type.RAR_MODULE) ||
+                           (nextType == ContainerInfo.Type.EAR_LIB) ||
+                           (nextType == ContainerInfo.Type.JAR_MODULE)) {
 
                     // These are the most usual cases.
 
@@ -387,11 +374,11 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
                 // be a problem.
 
                 String nextPath = getContainerPath(nextContainer);
-                if ( nextPath == null ) {
+                if (nextPath == null) {
                     return; // FFDC in 'getContainerPath'
                 }
 
-                if ( !addContainerClassSource(nextPath, nextContainer, nextPrefix) ) {
+                if (!addContainerClassSource(nextPath, nextContainer, nextPrefix)) {
                     return; // FFDC in 'addContainerClassSource'
                 }
             }
@@ -399,44 +386,44 @@ public class ModuleAnnotationsImpl extends AnnotationsImpl implements ModuleAnno
     }
 
     /*
-    [2/9/19 13:36:03:791 EST] 00000036 id=4016f9d5 ainer.service.app.deploy.internal.ApplicationInfoFactoryImpl > 
-    createEARApplicationInfo Entry
-    EJB_500
-    HugeEJBs_500
-    com.ibm.ws.adaptable.module.internal.InterpretedContainerImpl@fb995bd0
-    com.ibm.ws.app.manager.ear.internal.EARDeployedAppInfo@59933dcd
-    com.ibm.ws.app.manager.module.ApplicationNestedConfigHelper@e065e7a1
-    com.ibm.ws.app.manager.internal.ApplicationInstallInfo@9806c854
-    null
-    com.ibm.ws.app.manager.ear.internal.EARDeployedAppInfo@59933dcd
-
-  -- "EJB_500", which is labelled as "appName", is the name from server.xml
-  -- "HugeEJBs_500", which is labelled as "preferredName" is either the name from application.xml or from the application archive.
-
-  Within the factory method:
-
-      J2EEName j2eeName = j2eeNameFactory.getService().create(appName, null, null);
-      String name = reserveName(preferredName);
-
-      ExtendedApplicationInfo appInfo = new ApplicationInfoImpl(name, j2eeName, container, configHelper, applicationInformation);
-
-  -- "appName" is used to generate the J2EE name of the application.
-  -- "preferredName" is disambiguated and is used as the name of the application.
-
-  [2/9/19 13:36:03:791 EST] 00000036 id=00000000 ws.container.service.app.deploy.internal.ApplicationInfoImpl >
-    <init> Entry  
-    HugeEJBs_500
-    EJB_500
-    com.ibm.ws.adaptable.module.internal.InterpretedContainerImpl@fb995bd0
-    com.ibm.ws.app.manager.module.ApplicationNestedConfigHelper@e065e7a1
-    com.ibm.ws.app.manager.internal.ApplicationInstallInfo@9806c854
-
-  -- "HugeEjbs_500", which was obtained from application.xml or from the application archive,
-     is set as the "name" of the application information.
-  -- "EJB_500" is used to create metadata for the application.
-
-    ApplicationInfoImpl(String appName, J2EEName j2eeName, ...
-      this.appName = appName;
-      this.appMetaData = new ApplicationMetaDataImpl(j2eeName);
-      */    
+     * [2/9/19 13:36:03:791 EST] 00000036 id=4016f9d5 ainer.service.app.deploy.internal.ApplicationInfoFactoryImpl >
+     * createEARApplicationInfo Entry
+     * EJB_500
+     * HugeEJBs_500
+     * com.ibm.ws.adaptable.module.internal.InterpretedContainerImpl@fb995bd0
+     * com.ibm.ws.app.manager.ear.internal.EARDeployedAppInfo@59933dcd
+     * com.ibm.ws.app.manager.module.ApplicationNestedConfigHelper@e065e7a1
+     * com.ibm.ws.app.manager.internal.ApplicationInstallInfo@9806c854
+     * null
+     * com.ibm.ws.app.manager.ear.internal.EARDeployedAppInfo@59933dcd
+     *
+     * -- "EJB_500", which is labelled as "appName", is the name from server.xml
+     * -- "HugeEJBs_500", which is labelled as "preferredName" is either the name from application.xml or from the application archive.
+     *
+     * Within the factory method:
+     *
+     * J2EEName j2eeName = j2eeNameFactory.getService().create(appName, null, null);
+     * String name = reserveName(preferredName);
+     *
+     * ExtendedApplicationInfo appInfo = new ApplicationInfoImpl(name, j2eeName, container, configHelper, applicationInformation);
+     *
+     * -- "appName" is used to generate the J2EE name of the application.
+     * -- "preferredName" is disambiguated and is used as the name of the application.
+     *
+     * [2/9/19 13:36:03:791 EST] 00000036 id=00000000 ws.container.service.app.deploy.internal.ApplicationInfoImpl >
+     * <init> Entry
+     * HugeEJBs_500
+     * EJB_500
+     * com.ibm.ws.adaptable.module.internal.InterpretedContainerImpl@fb995bd0
+     * com.ibm.ws.app.manager.module.ApplicationNestedConfigHelper@e065e7a1
+     * com.ibm.ws.app.manager.internal.ApplicationInstallInfo@9806c854
+     *
+     * -- "HugeEjbs_500", which was obtained from application.xml or from the application archive,
+     * is set as the "name" of the application information.
+     * -- "EJB_500" is used to create metadata for the application.
+     *
+     * ApplicationInfoImpl(String appName, J2EEName j2eeName, ...
+     * this.appName = appName;
+     * this.appMetaData = new ApplicationMetaDataImpl(j2eeName);
+     */
 }

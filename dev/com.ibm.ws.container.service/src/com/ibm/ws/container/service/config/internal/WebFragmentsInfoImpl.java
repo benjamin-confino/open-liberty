@@ -43,7 +43,7 @@ import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
  * Aggregate web fragments information. See the documentation
  * on {@link WebFragmentInfo} for details.
  */
-class WebFragmentsInfoImpl implements WebFragmentsInfo {
+public class WebFragmentsInfoImpl implements WebFragmentsInfo {
     /** The trace component. */
     static final TraceComponent tc = Tr.register(WebFragmentsInfoImpl.class);
 
@@ -355,7 +355,7 @@ class WebFragmentsInfoImpl implements WebFragmentsInfo {
         return orderedItems;
     }
 
-    private static class WebFragmentItemImpl implements WebFragmentInfo {
+    public static class WebFragmentItemImpl implements WebFragmentInfo {
         private final Container container;
         public final WebFragment webFragment;
         public final String libraryURI;

@@ -71,7 +71,7 @@ public class AnnotationScanInJarTest extends FATServletClient {
 			}
 		}
 		
-		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, APP_NAME + ".ear")
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, APP_NAME + ".jar")
 				.addPackages(true, SpringJar.class.getPackage());
 
 		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, APP_NAME + ".ear")

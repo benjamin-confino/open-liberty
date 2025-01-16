@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -12,28 +12,30 @@
  *******************************************************************************/
 package com.ibm.ws.container.service.annocache.internal;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.ibm.wsspi.artifact.ArtifactContainer;
-import com.ibm.wsspi.artifact.overlay.OverlayContainer;
-
+import com.ibm.websphere.ras.Tr;
+import com.ibm.ws.container.service.annocache.FragmentAnnotations;
+import com.ibm.ws.container.service.annocache.WebAnnotations;
+import com.ibm.ws.container.service.app.deploy.WebModuleInfo;
+import com.ibm.ws.container.service.config.WebFragmentInfo;
+import com.ibm.ws.container.service.config.WebFragmentsInfo;
+import com.ibm.ws.container.service.config.internal.WebFragmentsInfoImpl;
+import com.ibm.ws.javaee.dd.web.WebFragment;
 import com.ibm.wsspi.adaptable.module.Container;
 import com.ibm.wsspi.adaptable.module.UnableToAdaptException;
-
 import com.ibm.wsspi.annocache.classsource.ClassSource_Aggregate;
 import com.ibm.wsspi.annocache.classsource.ClassSource_Aggregate.ScanPolicy;
 import com.ibm.wsspi.annocache.classsource.ClassSource_Factory;
 import com.ibm.wsspi.annocache.targets.AnnotationTargets_Targets;
-
-import com.ibm.ws.container.service.app.deploy.WebModuleInfo;
-import com.ibm.ws.container.service.config.WebFragmentInfo;
-import com.ibm.ws.container.service.config.WebFragmentsInfo;
-import com.ibm.websphere.ras.Tr;
-import com.ibm.ws.container.service.annocache.FragmentAnnotations;
-import com.ibm.ws.container.service.annocache.WebAnnotations;
+import com.ibm.wsspi.artifact.ArtifactContainer;
+import com.ibm.wsspi.artifact.overlay.OverlayContainer;
 
 /*
  * Web module annotation service implementation.
@@ -83,15 +85,12 @@ import com.ibm.ws.container.service.annocache.WebAnnotations;
 public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnnotations {
 
     public WebAnnotationsImpl(
-        AnnotationsAdapterImpl annotationsAdapter,
-        Container rootContainer, OverlayContainer rootOverlayContainer,
-        ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
-        WebModuleInfo webModuleInfo) throws UnableToAdaptException {
+                              AnnotationsAdapterImpl annotationsAdapter,
+                              Container rootContainer, OverlayContainer rootOverlayContainer,
+                              ArtifactContainer rootArtifactContainer, Container rootAdaptableContainer,
+                              WebModuleInfo webModuleInfo) throws UnableToAdaptException {
 
-        super(annotationsAdapter,
-              rootContainer, rootOverlayContainer,
-              rootArtifactContainer, rootAdaptableContainer,
-              webModuleInfo);
+        super(annotationsAdapter, rootContainer, rootOverlayContainer, rootArtifactContainer, rootAdaptableContainer, webModuleInfo);
 
         this.webModuleName = webModuleInfo.getName();
         this.webFragments = rootAdaptableContainer.adapt(WebFragmentsInfo.class);
@@ -138,8 +137,8 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
 
     //
 
-    private Map<String, WebFragmentInfo> pathToFragments;
-    private Map<WebFragmentInfo, String> fragmentToPath;
+    private final Map<String, WebFragmentInfo> pathToFragments;
+    private final Map<WebFragmentInfo, String> fragmentToPath;
 
     private String getFragmentPath(WebFragmentInfo fragment) {
         return fragmentToPath.get(fragment);
@@ -149,16 +148,16 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
         String uniquePath = fragmentPath;
 
         int count = 1;
-        while ( pathToFragments.containsKey(uniquePath) ) {
+        while (pathToFragments.containsKey(uniquePath)) {
             uniquePath = fragmentPath + "_" + count;
             count++;
         }
-        
+
         return uniquePath;
     }
 
     private String putUniquePath(WebFragmentInfo fragment, String fragmentPath) {
-    	String uniqueFragmentPath = getUniquePath(fragmentPath);
+        String uniqueFragmentPath = getUniquePath(fragmentPath);
 
         fragmentToPath.put(fragment, uniqueFragmentPath);
         pathToFragments.put(uniqueFragmentPath, fragment);
@@ -170,14 +169,28 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
 
     @Override
     protected void addInternalToClassSource() {
-    	String methodName = "addInternalToClassSource";
 
-        if ( rootClassSource == null ) {
+        String methodName = "addInternalToClassSource";
+        Set<Container> classLoaderContainres = new HashSet();
+
+        Set<Container> extraContainers = new HashSet<Container>();
+
+        try {
+            ClassLoader cl = classLoader.getParent();
+            Method method = cl.getClass().getSuperclass().getMethod("dirtyHack", null);
+            method.setAccessible(true);
+            Object o = method.invoke(classLoader, null);
+            extraContainers = (Set<Container>) o;
+
+        } catch (Exception e) {
+        }
+
+        if (rootClassSource == null) {
             return;
         }
 
         ClassSource_Factory classSourceFactory = getClassSourceFactory();
-        if ( classSourceFactory == null ) {
+        if (classSourceFactory == null) {
             return;
         }
 
@@ -195,13 +208,15 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
         // excluded element.  Less class information is used from excluded
         // fragments than is used from partial fragments.
 
-        for ( WebFragmentInfo nextFragment : getOrderedItems() ) {
+        for (WebFragmentInfo nextFragment : getOrderedItems()) {
             String nextUri = nextFragment.getLibraryURI();
             Container nextContainer = nextFragment.getFragmentContainer();
 
+            extraContainers.remove(nextContainer);
+
             boolean nextIsMetadataComplete;
             ScanPolicy nextPolicy;
-            if ( nextFragment.isSeedFragment() ) {
+            if (nextFragment.isSeedFragment()) {
                 nextPolicy = ClassSource_Aggregate.ScanPolicy.SEED;
                 nextIsMetadataComplete = false;
             } else {
@@ -209,20 +224,20 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
                 nextIsMetadataComplete = true;
             }
 
-            if ( tc.isDebugEnabled() ) {
+            if (tc.isDebugEnabled()) {
                 Tr.debug(tc, methodName + ": Fragment [ " + nextFragment + " ]");
                 Tr.debug(tc, methodName + ": URI [ " + nextUri + " ]");
                 Tr.debug(tc, methodName + ": Container [ " + nextContainer + " ]");
-                Tr.debug(tc, methodName + ": Metadata Complete [ " + nextIsMetadataComplete + " ]"); 
+                Tr.debug(tc, methodName + ": Metadata Complete [ " + nextIsMetadataComplete + " ]");
             }
 
             String nextPrefix;
-            if ( nextUri.equals("WEB-INF/classes") ) {
+            if (nextUri.equals("WEB-INF/classes")) {
                 // The expectation is that the supplied container is twice nested
                 // local child of the module container.
                 nextContainer = nextContainer.getEnclosingContainer().getEnclosingContainer();
                 nextPrefix = "WEB-INF/classes/";
-                if ( tc.isDebugEnabled() ) {
+                if (tc.isDebugEnabled()) {
                     Tr.debug(tc, methodName + ": Assigned Prefix [ " + nextPrefix + " ]");
                 }
             } else {
@@ -230,25 +245,44 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
             }
 
             String nextPath = getContainerPath(nextContainer);
-            if ( nextPath == null ) {
+            if (nextPath == null) {
                 return; // FFDC in 'getContainerPath'
             }
             nextPath = putUniquePath(nextFragment, nextPath);
-            if ( tc.isDebugEnabled() ) {
+            if (tc.isDebugEnabled()) {
                 Tr.debug(tc, methodName + ": Fragment [ " + nextFragment + " ]");
                 Tr.debug(tc, methodName + ": Path [ " + nextPath + " ]");
             }
 
-            if ( !addContainerClassSource(nextPath, nextContainer, nextPrefix, nextPolicy) ) {
+            if (!addContainerClassSource(nextPath, nextContainer, nextPrefix, nextPolicy)) {
                 return; // FFDC in 'addContainerClassSource'
             }
         }
 
-        for ( WebFragmentInfo nextFragment : getExcludedItems() ) {
-        	String nextUri = nextFragment.getLibraryURI();
+        try {
+            for (Container c : extraContainers) {
+
+                String containerPath = getContainerPath(c);
+                if (containerPath.endsWith("war")) {
+                    continue;
+                }
+
+                WebFragment nextFragment = c.adapt(WebFragment.class);
+                WebFragmentsInfoImpl.WebFragmentItemImpl nextFragmentInfo = new WebFragmentsInfoImpl.WebFragmentItemImpl(c, nextFragment, containerPath, containerPath, false);
+                String nextPath = putUniquePath(nextFragmentInfo, getContainerPath(c));
+                if (!nextPath.endsWith("war") && !addContainerClassSource(nextPath, c, ClassSource_Aggregate.ScanPolicy.SEED)) {
+                    return; // FFDC in 'addContainerClassSource'
+                }
+            }
+        } catch (UnableToAdaptException e) {
+            //Do nothing, just a prototype
+        }
+
+        for (WebFragmentInfo nextFragment : getExcludedItems()) {
+            String nextUri = nextFragment.getLibraryURI();
             Container nextContainer = nextFragment.getFragmentContainer();
 
-            if ( tc.isDebugEnabled() ) {
+            if (tc.isDebugEnabled()) {
                 Tr.debug(tc, methodName + ": Fragment [ " + nextFragment + " ]");
                 Tr.debug(tc, methodName + ": URI [ " + nextUri + " ]");
                 Tr.debug(tc, methodName + ": Container [ " + nextContainer + " ]");
@@ -256,17 +290,17 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
             }
 
             String nextPath = getContainerPath(nextContainer);
-            if ( nextPath == null ) {
+            if (nextPath == null) {
                 return; // FFDC in 'getContainerPath'
             }
             nextPath = putUniquePath(nextFragment, nextPath);
 
-            if ( tc.isDebugEnabled() ) {
+            if (tc.isDebugEnabled()) {
                 Tr.debug(tc, methodName + ": Fragment [ " + nextFragment + " ]");
                 Tr.debug(tc, methodName + ": Path [ " + nextPath + " ]");
             }
 
-            if ( !addContainerClassSource(nextPath, nextContainer, ClassSource_Aggregate.ScanPolicy.EXCLUDED) ) {
+            if (!addContainerClassSource(nextPath, nextContainer, ClassSource_Aggregate.ScanPolicy.EXCLUDED)) {
                 return; // FFDC in 'addContainerClassSource'
             }
         }
@@ -277,9 +311,9 @@ public class WebAnnotationsImpl extends ModuleAnnotationsImpl implements WebAnno
     @Override
     public FragmentAnnotations getFragmentAnnotations(WebFragmentInfo fragment) {
         AnnotationTargets_Targets useTargets = getTargets();
-        if ( useTargets == null ) {
+        if (useTargets == null) {
             return null;
         }
-        return new FragmentAnnotationsImpl( useTargets, getFragmentPath(fragment) );
+        return new FragmentAnnotationsImpl(useTargets, getFragmentPath(fragment));
     }
 }

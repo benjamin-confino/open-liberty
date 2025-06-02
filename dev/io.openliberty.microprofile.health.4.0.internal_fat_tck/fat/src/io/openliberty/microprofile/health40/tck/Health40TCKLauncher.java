@@ -28,6 +28,7 @@ import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
+import componenttest.topology.utils.tck.TCKUtilities;
 import io.openliberty.microprofile.health.internal_fat.shared.HealthActions;
 
 /**
@@ -40,7 +41,8 @@ public class Health40TCKLauncher {
     private static final String SERVER_NAME = "Health40TCKServer";
 
     @ClassRule
-    public static RepeatTests r = HealthActions.repeat(SERVER_NAME,
+    public static RepeatTests r = HealthActions.repeatIf(SERVER_NAME,
+                                                       TCKUtilities::areAllFeaturesPresent,
                                                        MicroProfileActions.MP70_EE11,
                                                        MicroProfileActions.MP70_EE10,
                                                        MicroProfileActions.MP61,

@@ -23,6 +23,7 @@ import org.osgi.framework.wiring.BundleWiring;
 
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.CDIServiceUtils;
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
 import com.ibm.ws.cdi.internal.interfaces.Application;
 import com.ibm.ws.cdi.internal.interfaces.ArchiveType;
 import com.ibm.ws.cdi.internal.interfaces.CDIArchive;
@@ -109,7 +110,9 @@ public class RuntimeFactory {
                                                          Set<String> extraClasses,
                                                          Set<String> extraAnnotations,
                                                          boolean applicationBDAsVisible,
-                                                         boolean extClassesOnly, Set<String> extraExtensionClasses) throws CDIException {
+                                                         boolean extClassesOnly,
+                                                         CDIExtensionMetadataInternal.VisibilityMode visibilityMode,
+                                                         Set<String> extraExtensionClasses) throws CDIException {
 
         ExtensionArchive extensionArchive = null;
         Container container = getContainerForBundle(bundle);
@@ -119,7 +122,7 @@ public class RuntimeFactory {
         if (container != null) {
             ExtensionContainerInfo containerInfo = new ExtensionContainerInfo(container, loader, CDIServiceUtils.getSymbolicNameWithoutMinorOrMicroVersionPart(bundle.getSymbolicName())
                                                                                                  + "_"
-                                                                                                 + CDIServiceUtils.getOSGIVersionForBndName(bundle.getVersion()), extraClasses, extraAnnotations, applicationBDAsVisible, extClassesOnly);
+                                                                                                 + CDIServiceUtils.getOSGIVersionForBndName(bundle.getVersion()), extraClasses, extraAnnotations, applicationBDAsVisible, extClassesOnly, visibilityMode);
             extensionArchive = new ExtensionArchiveImpl(containerInfo, this, extraExtensionClasses);
         }
         return extensionArchive;

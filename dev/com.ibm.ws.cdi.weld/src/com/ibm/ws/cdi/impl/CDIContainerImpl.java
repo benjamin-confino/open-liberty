@@ -44,6 +44,8 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.CDIService;
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal.VisibilityMode;
 import com.ibm.ws.cdi.impl.weld.BDAFactory;
 import com.ibm.ws.cdi.impl.weld.LibertyFilteringDelegatingValidator;
 import com.ibm.ws.cdi.impl.weld.WebSphereCDIDeploymentImpl;
@@ -750,8 +752,10 @@ public class CDIContainerImpl implements CDIContainer, InjectionMetaDataListener
         String extClassesOnlyStr = (String) sr.getProperty(EXTENSION_CLASSES_ONLY_MODE);
         boolean extClassesOnly = Boolean.parseBoolean(extClassesOnlyStr);
 
+        VisibilityMode visibilityMode = CDIExtensionMetadataInternal.VisibilityMode.PerApplication; //Not available on the deprecated API.
+
         ExtensionArchive extensionArchive = cdiRuntime.getExtensionArchiveForBundle(bundle, extra_classes, extraAnnotations,
-                                                                                    applicationBDAsVisible, extClassesOnly, Collections.emptySet());
+                                                                                    applicationBDAsVisible, extClassesOnly, visibilityMode, Collections.emptySet());
 
         return extensionArchive;
     }

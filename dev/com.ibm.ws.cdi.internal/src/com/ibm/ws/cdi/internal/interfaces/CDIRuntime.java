@@ -26,6 +26,7 @@ import org.osgi.framework.Bundle;
 
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.CDIService;
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
 import com.ibm.ws.cdi.extension.WebSphereCDIExtension;
 import com.ibm.ws.resource.ResourceRefConfigFactory;
 import com.ibm.ws.runtime.metadata.ApplicationMetaData;
@@ -127,6 +128,7 @@ public interface CDIRuntime extends CDIService {
     public ExtensionArchive getExtensionArchiveForBundle(Bundle bundle, Set<String> extra_classes, Set<String> extraAnnotations,
                                                          boolean applicationBDAsVisible,
                                                          boolean extClassesOnly,
+                                                         CDIExtensionMetadataInternal.VisibilityMode visibilityMode,
                                                          Set<String> extraExtensionClasses) throws CDIException;
 
     /**

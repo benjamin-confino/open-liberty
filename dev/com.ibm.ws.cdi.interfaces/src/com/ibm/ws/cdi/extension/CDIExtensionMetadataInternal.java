@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -46,11 +46,23 @@ import io.openliberty.cdi.spi.CDIExtensionMetadata;
  */
 public interface CDIExtensionMetadataInternal {
 
+    public enum VisibilityMode {
+        PerApplication,
+        PerModule
+    }
+
     /**
      * @return whether beans created from this extension can see and inject beans provided by the application and other extensions.
      */
     default boolean applicationBeansVisible() {
         return false;
+    }
+
+    /**
+     * @return true if
+     */
+    default VisibilityMode limitiedVisibility() {
+        return VisibilityMode.PerApplication;
     }
 
 }

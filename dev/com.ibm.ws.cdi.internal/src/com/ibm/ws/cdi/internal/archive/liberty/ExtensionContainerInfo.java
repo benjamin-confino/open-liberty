@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -14,6 +14,7 @@ package com.ibm.ws.cdi.internal.archive.liberty;
 
 import java.util.Set;
 
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
 import com.ibm.ws.container.service.app.deploy.ContainerInfo;
 import com.ibm.wsspi.adaptable.module.Container;
 
@@ -25,10 +26,12 @@ public class ExtensionContainerInfo implements ContainerInfo {
     private final Set<String> extraBeanDefiningAnnotations;
     private final boolean applicationBDAsVisible;
     private final boolean extClassesOnly;
+    private final CDIExtensionMetadataInternal.VisibilityMode visibilityMode;
 
     ExtensionContainerInfo(Container container, ClassLoader classLoader, String containerName,
                            Set<String> extraClasses, Set<String> extraBeanDefiningAnnotations,
-                           boolean applicationBDAsVisible, boolean extClassesOnly) {
+                           boolean applicationBDAsVisible, boolean extClassesOnly,
+                           CDIExtensionMetadataInternal.VisibilityMode visibilityMode) {
         this.container = container;
         this.containerName = containerName;
         this.classLoader = classLoader;
@@ -36,6 +39,7 @@ public class ExtensionContainerInfo implements ContainerInfo {
         this.extraBeanDefiningAnnotations = extraBeanDefiningAnnotations;
         this.applicationBDAsVisible = applicationBDAsVisible;
         this.extClassesOnly = extClassesOnly;
+        this.visibilityMode = visibilityMode;
     }
 
     public ClassLoader getClassLoader() {

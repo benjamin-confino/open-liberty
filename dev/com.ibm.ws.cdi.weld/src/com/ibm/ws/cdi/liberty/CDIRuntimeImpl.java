@@ -42,6 +42,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.CDIService;
+import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
 import com.ibm.ws.cdi.extension.WebSphereCDIExtension;
 import com.ibm.ws.cdi.impl.AbstractCDIRuntime;
 import com.ibm.ws.cdi.impl.CDIContainerImpl;
@@ -573,9 +574,11 @@ public class CDIRuntimeImpl extends AbstractCDIRuntime implements ApplicationSta
                                                          Set<String> extraAnnotations,
                                                          boolean applicationBDAsVisible,
                                                          boolean extClassesOnly,
+                                                         CDIExtensionMetadataInternal.VisibilityMode visibilityMode,
                                                          Set<String> spiExtensionClasses) throws CDIException {
 
         ExtensionArchive extensionArchive = runtimeFactory.getExtensionArchiveForBundle(bundle, extraClasses, extraAnnotations, applicationBDAsVisible, extClassesOnly,
+                                                                                        visibilityMode,
                                                                                         spiExtensionClasses);
 
         return extensionArchive;

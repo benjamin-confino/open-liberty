@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,23 +50,18 @@ import org.jboss.weld.bootstrap.spi.Metadata;
 import org.jboss.weld.bootstrap.spi.helpers.MetadataImpl;
 import org.jboss.weld.interceptor.WeldInvocationContext;
 import org.jboss.weld.resources.spi.ResourceLoadingException;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.cdi.CDIException;
 import com.ibm.ws.cdi.CDIRuntimeException;
 import com.ibm.ws.cdi.extension.CDIExtensionMetadataInternal;
-import com.ibm.ws.cdi.internal.interfaces.CDIRuntime;
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
 import com.ibm.ws.util.ThreadContextAccessor;
 
-import com.ibm.wsspi.kernel.service.utils.ServiceAndServiceReferencePair;
-import com.ibm.wsspi.kernel.service.utils.ServiceReferenceUtils;
-
 import io.openliberty.cdi.spi.CDIExtensionMetadata;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Common constants and utility methods
@@ -151,7 +145,7 @@ public class CDIUtils {
      * If a class name cannot be found, it is ignored.
      *
      * @param classLoader the classLoader
-     * @param classNames classes to load
+     * @param classNames  classes to load
      * @return the map of loaded Class objects
      */
     public static Map<String, Class<?>> loadClasses(ClassLoader classLoader, Set<String> classNames) {
@@ -241,7 +235,7 @@ public class CDIUtils {
      * Create the extension and return a metadata for the extension
      *
      * @param extensionClass extension class name
-     * @param classloader the class loader that loads the extension
+     * @param classloader    the class loader that loads the extension
      * @return
      */
     public static Metadata<Extension> loadExtension(String extensionClass, ClassLoader classloader) {
@@ -259,9 +253,9 @@ public class CDIUtils {
     /**
      * load the class and then casts to the specified sub class
      *
-     * @param expectedType the expected return class
+     * @param expectedType     the expected return class
      * @param serviceClassName the service class name
-     * @param classloader the class loader that loads the service class
+     * @param classloader      the class loader that loads the service class
      * @return the subclass specified by expectedType
      */
     public static <S> Class<? extends S> loadClass(Class<S> expectedType, String serviceClassName, ClassLoader classloader) {
@@ -411,13 +405,14 @@ public class CDIUtils {
     /**
      * Returns all interceptor bindings which apply to the current invocation or lifecycle event.
      *
-     * @return a set of interceptor bindings which apply to the current invocation or lifecycle event. This will include all interceptor bindings that apply, not just those that were used to bind the current interceptor.
+     * @return a set of interceptor bindings which apply to the current invocation or lifecycle event. This will include all interceptor bindings that apply, not just those that
+     *         were used to bind the current interceptor.
      * @throws IllegalArgumentException if InvocationContext is not an instance of org.jboss.weld.interceptor.proxy.AbstractInvocationContext;
      */
     public static Set<Annotation> getInterceptorBindingsFromInvocationContext(InvocationContext invocationContext) throws IllegalArgumentException {
         if (invocationContext instanceof WeldInvocationContext) {
             WeldInvocationContext weldInvocationContext = (WeldInvocationContext) invocationContext;
-            return weldInvocationContext.getInterceptorBindings();            
+            return weldInvocationContext.getInterceptorBindings();
         } else {
             throw new IllegalArgumentException("InvocationContext was not an instance of WeldInvocationContext");
         }
@@ -430,7 +425,7 @@ public class CDIUtils {
      * @return An ExtensionArchive with all the contents defined in CDIExtensionMetadata
      */
     public static ExtensionArchive newSPIExtensionArchive(CDIRuntime cdiRuntime, ServiceReference<CDIExtensionMetadata> sr,
-                                                    CDIExtensionMetadata webSphereCDIExtensionMetaData, WebSphereCDIDeployment applicationContext) throws CDIException {
+                                                          CDIExtensionMetadata webSphereCDIExtensionMetaData, WebSphereCDIDeployment applicationContext) throws CDIException {
         Bundle bundle = sr.getBundle();
 
         Set<Class<? extends Extension>> extensionClasses = webSphereCDIExtensionMetaData.getExtensions();
@@ -446,9 +441,12 @@ public class CDIUtils {
         //The SPI does not offer this property.
         boolean extClassesOnly = false;
 
+        CDIExtensionMetadataInternal.VisibilityMode visibilityMode = CDIExtensionMetadataInternal.VisibilityMode.PerApplication;
+
         if (webSphereCDIExtensionMetaData instanceof CDIExtensionMetadataInternal) {
             CDIExtensionMetadataInternal internalExtension = (CDIExtensionMetadataInternal) webSphereCDIExtensionMetaData;
             applicationBDAsVisible = internalExtension.applicationBeansVisible();
+            visibilityMode = internalExtension.limitiedVisibility();
         }
 
         if (TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled()) {
@@ -465,7 +463,7 @@ public class CDIUtils {
 
         ExtensionArchive extensionArchive = cdiRuntime.getExtensionArchiveForBundle(bundle, extra_classes, extraAnnotations,
                                                                                     applicationBDAsVisible,
-                                                                                    extClassesOnly, extensionClassNames);
+                                                                                    extClassesOnly, visibilityMode, extensionClassNames);
 
         return extensionArchive;
     }

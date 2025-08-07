@@ -335,7 +335,38 @@ public class CDIContainerImpl implements CDIContainer, InjectionMetaDataListener
      */
     private void addRuntimeExtensions(WebSphereCDIDeployment webSphereCDIDeployment,
                                       DiscoveredBdas discoveredBdas) throws CDIException {
+
+        ///////////TODO///////
+
+        //This whole area is an unfinished mess as I realised actually doing it is unessacary to know if i could do it.
+        //The next step is to get the CDIArchive from
+        //        Set<WebSphereBeanDeploymentArchive> extensions = createExtensionBDAs(webSphereCDIDeployment);
+        // (currently in a child method)
+        // cast it to ExtensionArchiveImpl
+        // then get the visiblity mode from ExtensionArchiveImpl's contained ExtensionContainerInfo
+        //
+        // with that its just a question of ensuring the methods
+        // extBDA.addBeanDeploymentArchive(bda);
+        // and
+        // bda.addBeanDeploymentArchive(extBDA);
+        //
+        // are called in accordence with whatever visibility rules we want
+        /////////////////////
+
         //add the normal runtime extension using the bundle classloader to load the bda classes
+        createAndWireApplciationScopedExtensions(webSphereCDIDeployment, discoveredBdas);
+
+        //Do the same thing, but for per-module extensions
+        createAndWireModuleScopedExtensions(webSphereCDIDeployment, discoveredBdas);
+    }
+
+    private void createAndWireModuleScopedExtensions(WebSphereCDIDeployment webSphereCDIDeployment,
+                                                     DiscoveredBdas discoveredBdas) throws CDIException {
+
+    }
+
+    private void createAndWireApplciationScopedExtensions(WebSphereCDIDeployment webSphereCDIDeployment,
+                                                          DiscoveredBdas discoveredBdas) throws CDIException {
         Set<WebSphereBeanDeploymentArchive> extensions = createExtensionBDAs(webSphereCDIDeployment);
         //add the runtime extensions containers
         webSphereCDIDeployment.addBeanDeploymentArchives(extensions);

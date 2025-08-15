@@ -51,4 +51,5 @@ WS-TraceGroup: APPCONFIG
 	com.ibm.ws.container.service;version=latest,\
 	com.ibm.ws.app.manager;version=latest,\
 	com.ibm.ws.config;version=latest, \
-	io.openliberty.microprofile.config.internal.common;version=latest
+	io.openliberty.microprofile.config.internal.common;version=latest, \
+	com.ibm.ws.crypto.passwordutil

@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -15,11 +15,15 @@ package io.openliberty.microprofile.config.internal.serverxml;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.osgi.framework.BundleContext;
 
+import com.ibm.websphere.crypto.InvalidPasswordDecodingException;
+import com.ibm.websphere.crypto.PasswordUtil;
+import com.ibm.websphere.crypto.UnsupportedCryptoAlgorithmException;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Trivial;
@@ -110,7 +114,25 @@ public class ServerXMLVariableConfigSource extends InternalConfigSource implemen
         } else {
             props = Collections.emptyMap();
         }
-        return props;
-    }
 
+        Map<String, String> propsDecypted = new HashMap<String, String>();
+
+        //Check if any of the variables are encrypted and still decrypt them.
+        //As this is just a prototype I'll ask the security team how horrible this is if we actually decide to implement this.
+        for (String s : props.keySet()) {
+            String maybeEncryptedValue = props.get(s);
+            if (PasswordUtil.isEncrypted(maybeEncryptedValue)) {
+                try {
+                    String decyptedValue = PasswordUtil.decode(maybeEncryptedValue);
+                    propsDecypted.put(s, decyptedValue);
+                } catch (InvalidPasswordDecodingException | UnsupportedCryptoAlgorithmException e) {
+                    //Ignored for prototyping
+                    System.out.println(e.toString());
+                }
+            } else {
+                propsDecypted.put(s, maybeEncryptedValue);
+            }
+        }
+        return Collections.unmodifiableMap(propsDecypted);
+    }
 }

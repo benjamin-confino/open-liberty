@@ -20,5 +20,8 @@
 	</webApplication>
 	
 	<variable name="keyFromServerXML" value="${KeyDefinedIn2Places}" />
+	
+	<!-- decypts to: TopSecretPassword-->
+	<variable name="encyptedKeyFromServerXML" value="{aes}ARAkcIZ2ApI6IUpsOlkA8EQR6FZtzAvorKzHRmdARVzsCzC5VTY2Tk4iFERCl1WrfFHyqDPTA1AMwxd7xifQatDdMEfhdA4/SgWoSB5+tlifLpBvckuBKcrleycuHpIZfLoMtgnuuuoadQ02Uuz21s5A9KE=" />
     
 </server>

@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -12,38 +12,39 @@
  *******************************************************************************/
 package com.ibm.ws.jpa.container.v21.cdi.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 import javax.enterprise.inject.spi.BeanManager;
 
 import com.ibm.ws.ffdc.annotation.FFDCIgnore;
+import com.ibm.ws.jpa.container.v21.cdi.internal.beancontainer.IBMCdiBeanContainerExtendedAccessImpl;
 
 public class IBMHibernateExtendedBeanManager {
 
-    private ClassLoader applicationClassLoader;
-    private String earAppId;
-    //Used to filter before shutdown events to the correct app. 
+    private final ClassLoader applicationClassLoader;
+    private final String earAppId;
+    //Used to filter before shutdown events to the correct app.
     //Before shutdown events have very little data to identify apps, but we can check to see it's the
-    //same bean manager as the after bean discovery event, which has more data. 
+    //same bean manager as the after bean discovery event, which has more data.
     //This memory expensive reference is garbage collected along with this entire object after the
     //before shutdown event.
-    private BeanManager beanManager; 
+    private BeanManager beanManager;
     //Actual type is org.hibernate.resource.beans.container.spi.ExtendedBeanManager.LifecycleListener
-    private Queue<Object> hibernateLifecycleListeners = new LinkedList<Object>();
+    private final Queue<Object> hibernateLifecycleListeners = new LinkedList<Object>();
 
-    public IBMHibernateExtendedBeanManager(ClassLoader applicationClassLoader, String earAppId){
+    public IBMHibernateExtendedBeanManager(ClassLoader applicationClassLoader, String earAppId) {
         this.applicationClassLoader = applicationClassLoader;
         this.earAppId = earAppId;
+    }
+
+    public void registerLifecycleListener(IBMCdiBeanContainerExtendedAccessImpl lifecycleListener) {
+        hibernateLifecycleListeners.add(lifecycleListener);
     }
 
     //Actual type is org.hibernate.resource.beans.container.spi.ExtendedBeanManager.LifecycleListener
@@ -51,28 +52,27 @@ public class IBMHibernateExtendedBeanManager {
     public void registerLifecycleListener(Object lifecycleListener) {
         Class<?> lifeCycleListenerClass = null;
         try {
-            lifeCycleListenerClass = Class.forName("org.hibernate.resource.beans.container.spi.ExtendedBeanManager$LifecycleListener"
-                                                   ,true, applicationClassLoader);
+            lifeCycleListenerClass = Class.forName("org.hibernate.resource.beans.container.spi.ExtendedBeanManager$LifecycleListener", true, applicationClassLoader);
         } catch (ClassNotFoundException e) {
-            //We're unlikely to reach this as this class is only used if 
-            //org.hibernate.resource.beans.container.spi.ExtendedBeanManager is in the classloader 
+            //We're unlikely to reach this as this class is only used if
+            //org.hibernate.resource.beans.container.spi.ExtendedBeanManager is in the classloader
             throw new IllegalStateException("Failed to find org.hibernate.resource.beans.container.spi.ExtendedBeanManager$LifecycleListener", e);
         }
-        
+
         if (lifeCycleListenerClass.isAssignableFrom(lifecycleListener.getClass())) {
             hibernateLifecycleListeners.add(lifecycleListener);
         } else {
             String errorMsg = "Object " + lifecycleListener + " of class " + lifecycleListener.getClass().getCanonicalName()
-                    + " is not instance of org.hibernate.resource.beans.container.spi.ExtendedBeanManager.LifecycleListener";
+                              + " is not instance of org.hibernate.resource.beans.container.spi.ExtendedBeanManager.LifecycleListener";
             throw new IllegalArgumentException(errorMsg);
         }
     }
-    
+
     public void notifyHibernateAfterBeanDiscovery(final String baseClassLoaderId, final BeanManager beanManager) throws SecurityException, IllegalArgumentException {
         if (earAppId.equals(baseClassLoaderId)) {
             this.beanManager = beanManager;
             Iterator<Object> it = hibernateLifecycleListeners.iterator();
-            while (it.hasNext()){
+            while (it.hasNext()) {
                 final Object o = it.next();
                 try {
                     AccessController.doPrivileged(new PrivilegedAction<Void>() {
@@ -88,7 +88,7 @@ public class IBMHibernateExtendedBeanManager {
                             }
                             return null;
                         }
-                    });    
+                    });
                 } catch (SecurityException e) {
                 }
             }
@@ -100,7 +100,7 @@ public class IBMHibernateExtendedBeanManager {
         if (this.beanManager.equals(beanManager)) {
             rightBeanManager = true;
             Iterator<Object> it = hibernateLifecycleListeners.iterator();
-            while (it.hasNext()){
+            while (it.hasNext()) {
                 final Object o = it.next();
                 try {
                     AccessController.doPrivileged(new PrivilegedAction<Void>() {
@@ -116,7 +116,7 @@ public class IBMHibernateExtendedBeanManager {
                             }
                             return null;
                         }
-                    });    
+                    });
                 } catch (SecurityException e) {
                 } finally {
                     it.remove();

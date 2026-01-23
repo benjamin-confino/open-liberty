@@ -128,6 +128,7 @@ Import-Package: \
   jakarta.enterprise.event;version="[4.1,5.0)", \
   jakarta.enterprise.inject.spi;version="[4.1,5.0)", \
   jakarta.enterprise.util;version="[4.1,5.0)", \
+  org.jboss.jandex; version="[2.4,4)", \
   !jakarta.json.bind, \
   !jakarta.json.bind.spi, \
   !jakarta.mail, \

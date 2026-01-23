@@ -20,6 +20,10 @@ Private-Package: \
 	com.ibm.ws.anno.*, \
 	com.ibm.ws.annocache.*
 
+Import-Package: \
+        org.jboss.jandex; version="[2.4,4)", \
+        *
+
 Export-Package: \
 	com.ibm.wsspi.anno.service;provide:=true, \
 	com.ibm.wsspi.anno.info;provide:=true, \

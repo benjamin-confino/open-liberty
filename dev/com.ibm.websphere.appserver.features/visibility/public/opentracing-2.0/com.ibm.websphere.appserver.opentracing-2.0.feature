@@ -13,7 +13,7 @@ IBM-SPI-Package: io.openliberty.opentracing.spi.tracer
 -features=com.ibm.websphere.appserver.mpConfig-2.0, \
   com.ibm.websphere.appserver.jaxrs-2.1, \
   com.ibm.websphere.appserver.cdi-2.0, \
-  com.ibm.websphere.appserver.internal.jandex.2.0
+  io.openliberty.io.smallrye.jandex-2.0
 -bundles=com.ibm.ws.jaxrs.defaultexceptionmapper, \
          com.ibm.ws.jaxrs.2.x.defaultexceptionmapper, \
          io.openliberty.opentracing.2.0.internal, \

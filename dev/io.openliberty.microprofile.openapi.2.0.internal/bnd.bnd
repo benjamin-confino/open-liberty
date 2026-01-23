@@ -80,7 +80,7 @@ WS-TraceGroup: MPOPENAPI
     com.ibm.ws.kernel.service;version=latest,\
     com.ibm.ws.logging;version=latest,\
     com.ibm.ws.org.apache.commons.lang3;version=latest,\
-    io.openliberty.io.smallrye.jandex3;version=latest,\
+    com.ibm.ws.org.jboss.jandex;version=latest,\
     com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
     com.ibm.ws.webcontainer;version=latest,\
     com.ibm.wsspi.org.osgi.service.component.annotations;version=latest,\

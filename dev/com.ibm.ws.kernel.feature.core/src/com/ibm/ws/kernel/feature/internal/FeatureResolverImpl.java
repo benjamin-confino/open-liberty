@@ -416,13 +416,14 @@ public class FeatureResolverImpl implements FeatureResolver {
 
     /**
      * Trim and lowercase the platform list
+     *
      * @param rootPlatforms
      * @return
      */
-    private List<String> normalizeRootPlatforms(Collection<String> rootPlatforms){
+    private List<String> normalizeRootPlatforms(Collection<String> rootPlatforms) {
         List<String> normalizedPlatforms = new ArrayList<String>();
-        if(rootPlatforms != null){
-            for(String plat : rootPlatforms){
+        if (rootPlatforms != null) {
+            for (String plat : rootPlatforms) {
                 normalizedPlatforms.add(plat.trim().toLowerCase());
             }
         }
@@ -992,9 +993,9 @@ public class FeatureResolverImpl implements FeatureResolver {
             ProvisioningFeatureDefinition featureDef = selectionContext.getRepository().getFeature(feature);
             if (featureDef.isCompatibility()) {
                 boolean addedPlatform = false;
-                if(!rootPlatforms.isEmpty()){
-                    for(String platName : featureDef.getPlatformNames()){
-                        if(rootPlatforms.contains(platName)){
+                if (!rootPlatforms.isEmpty()) {
+                    for (String platName : featureDef.getPlatformNames()) {
+                        if (rootPlatforms.contains(platName)) {
                             result.addResolvedPlatform(platName);
                             addedPlatform = true;
                         }
@@ -1062,7 +1063,7 @@ public class FeatureResolverImpl implements FeatureResolver {
         allCompatibilityFeatures = new HashMap<>();
         for (ProvisioningFeatureDefinition feature : features) {
             if (feature.isCompatibility()) {
-                for(String platformName : feature.getPlatformNames()){
+                for (String platformName : feature.getPlatformNames()) {
                     allCompatibilityFeatures.put(platformName.toLowerCase(), feature);
                 }
             }
@@ -1273,6 +1274,11 @@ public class FeatureResolverImpl implements FeatureResolver {
     private void processIncluded(ProvisioningFeatureDefinition includingFeature, FeatureResource included, Set<String> allowedTolerations, Deque<String> chain, Set<String> result,
                                  SelectionContext selectionContext) {
         String symbolicName = included.getSymbolicName();
+
+        if (symbolicName.contains("anno") || symbolicName.contains("jandex")) {
+            int i = 1;
+            i++;
+        }
 
         if (symbolicName == null) {
             // TODO why do we report this feature as missing, seems a better error message would indicate the FeatureResource requirement has no SN

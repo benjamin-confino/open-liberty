@@ -30,6 +30,7 @@ Service-Component: \
     properties:="resources=META-INF/services/io.smallrye.openapi.runtime.scanner.spi.AnnotationScanner"
 
 Import-Package: \
+   org.jboss.jandex; version="[2.4,4)", \
    *
 
 Export-Package: \

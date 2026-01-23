@@ -37,6 +37,7 @@ Import-Package: \
   !org.eclipse.microprofile.context.spi,\
   !org.eclipse.microprofile.metrics,\
   !org.eclipse.microprofile.metrics.annotation,\
+  org.jboss.jandex; version="[2.4,4)", \
   *
 
 DynamicImport-Package: \
@@ -91,7 +92,7 @@ Service-Component: \
   io.smallrye:smallrye-graphql-schema-builder;strategy=exact;version=${smallryeGraphQLVersion},\
   io.smallrye:smallrye-graphql-schema-model;strategy=exact;version=${smallryeGraphQLVersion},\
   io.smallrye:smallrye-graphql-servlet;strategy=exact;version=${smallryeGraphQLVersion},\
-  io.openliberty.io.smallrye.jandex3;version=latest,\
+  com.ibm.ws.org.jboss.jandex;version=latest,\
   com.ibm.websphere.javaee.annotation.1.3;version=latest,\
   com.ibm.websphere.javaee.cdi.2.0;version=latest,\
   com.ibm.websphere.javaee.interceptor.1.2;version=latest,\

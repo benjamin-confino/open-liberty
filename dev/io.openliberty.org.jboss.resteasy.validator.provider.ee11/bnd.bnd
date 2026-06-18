@@ -42,6 +42,7 @@ Export-Package: \
   org.jboss.resteasy.plugins.validation.i18n;version=${resteasy-version}
 
 Import-Package: \
+  org.jboss.logging;version="[3.5,3.6)", \
   org.jboss.resteasy.api.validation, \
   jakarta.enterprise.context;version=!,\
   jakarta.persistence,\

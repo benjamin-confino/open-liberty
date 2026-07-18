@@ -1,0 +1,263 @@
+// btags/build.gradle
+//
+// Cross-platform replacement for GNUmakefile + GNUmakefile.incremental.
+// Pure Java workers (in buildSrc/) — no bash, no awk, no GNU make required.
+// Requires only: Java 11+, Gradle 7+, Universal Ctags on PATH.
+//
+// Usage:
+//   cd btags && gradle tags              # build all indexes
+//   cd btags && gradle tags -PbtagsRoot=/other/project
+//   cd btags && gradle ctags             # ctags only
+//   cd btags && gradle clean             # remove all generated output
+//
+// Properties (gradle.properties or -P):
+//   btagsRoot   — project root to index  (default: parent of btags/)
+//   ctagsJobs   — parallel ctags threads (default: 20)
+//   ftagsJobs   — parallel ftags threads (default: 20)
+
+import btags.*
+
+// ---------------------------------------------------------------------------
+// Resolve project root
+// ---------------------------------------------------------------------------
+def btagsDir    = projectDir.canonicalFile
+def projectRoot = project.hasProperty('btagsRoot')
+        ? new File(btagsRoot as String).canonicalFile
+        : btagsDir.parentFile.canonicalFile
+
+def ctagsJobs = ((project.findProperty('ctagsJobs') ?: '20') as String).toInteger()
+def ftagsJobs = ((project.findProperty('ftagsJobs') ?: '20') as String).toInteger()
+
+// ---------------------------------------------------------------------------
+// Output directories
+// ---------------------------------------------------------------------------
+def ctagsDir       = new File(btagsDir, 'ctags')
+def ctagsPartsDir  = new File(ctagsDir, 'parts')
+def ctagsStampsDir = new File(ctagsDir, '.stamps')
+def ctagsFile      = new File(ctagsDir, 'tags')
+
+def ftagsDir       = new File(btagsDir, 'ftags')
+def ftagsFnsDir    = new File(ftagsDir, '.fns')
+def ftagsAllFile   = new File(ftagsDir, 'l.tsv')
+
+def stagsDir       = new File(btagsDir, 'stags')
+def stagsStampsDir = new File(stagsDir, '.stamps')
+def stagsSentinel  = new File(stagsDir, 'a.tsv')
+
+def ltagsDir       = new File(btagsDir, 'ltags')
+def ltagsStampsDir = new File(ltagsDir, '.stamps')
+
+def xtagsDir       = new File(btagsDir, 'xtags')
+def xtagsCallsDir  = new File(xtagsDir, '.calls')
+def xtagsStampsDir = new File(xtagsDir, '.stamps')
+def xtagsAllFile   = new File(xtagsDir, 'l.tsv')
+
+// ---------------------------------------------------------------------------
+// Parallel helper — run a list of closures across a thread pool, collect errors.
+// Returns list of error strings (empty = success).
+// ---------------------------------------------------------------------------
+def parallel = { int nThreads, List<Closure> jobs ->
+    def pool   = java.util.concurrent.Executors.newFixedThreadPool(nThreads)
+    def errors = new java.util.concurrent.CopyOnWriteArrayList<String>()
+    jobs.each { job ->
+        pool.submit({
+            try { job.call() }
+            catch (Exception e) { errors.add(e.message ?: e.toString()) }
+        } as Runnable)
+    }
+    pool.shutdown()
+    pool.awaitTermination(60, java.util.concurrent.TimeUnit.MINUTES)
+    errors as List
+}
+
+// ---------------------------------------------------------------------------
+// ctags
+// ---------------------------------------------------------------------------
+task ctags {
+    group       = 'btags'
+    description = 'Run Universal Ctags on all Java components, then merge partials.'
+    outputs.upToDateWhen { false }
+
+    doLast {
+        [ctagsPartsDir, ctagsStampsDir].each { it.mkdirs() }
+        def compDirs = SourceDiscovery.findJavaCompDirs(projectRoot)
+        println "[ctags] Scanning ${compDirs.size()} Java components (jobs: ${ctagsJobs}) ..."
+
+        def jobs = compDirs.collect { compPath ->
+            {->
+                def partFile  = new File(ctagsPartsDir, "java_${new File(compPath).name}.tags")
+                def stampFile = new File(ctagsStampsDir, "java_${new File(compPath).name}.stamp")
+                CtagsPart.run(Util.findCtags(), new File(compPath), partFile, stampFile)
+            }
+        }
+        def errs = parallel(ctagsJobs, jobs)
+        errs.each { println "[ctags] WARN: $it" }
+
+        MergeCtags.run(ctagsPartsDir, ctagsFile)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ftags
+// ---------------------------------------------------------------------------
+task ftags {
+    group       = 'btags'
+    description = 'Generate function/method range index.'
+    dependsOn ctags
+    outputs.upToDateWhen { false }
+
+    doLast {
+        [ftagsDir, ftagsFnsDir].each { it.mkdirs() }
+        def compDirs = SourceDiscovery.findJavaCompDirs(projectRoot)
+        println "[ftags] Scanning ${compDirs.size()} components (jobs: ${ftagsJobs}) ..."
+
+        def jobs = compDirs.collect { compPath ->
+            {->
+                def srcDir  = new File(compPath, 'src')
+                if (!srcDir.isDirectory()) srcDir = new File(compPath)
+                def fnsFile = new File(ftagsFnsDir, "java_${new File(compPath).name}.fns")
+                FtagsComp.run(Util.findCtags(), srcDir, projectRoot, fnsFile)
+            }
+        }
+        def errs = parallel(ftagsJobs, jobs)
+        errs.each { println "[ftags] WARN: $it" }
+
+        FtagsMerge.run(ftagsFnsDir, ftagsDir)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// stags
+// ---------------------------------------------------------------------------
+task stags {
+    group       = 'btags'
+    description = 'Generate structure-type index (classes, enums, interfaces …).'
+    dependsOn ctags
+    outputs.upToDateWhen { false }
+
+    doLast {
+        [stagsDir, stagsStampsDir].each { it.mkdirs() }
+        def parts = (ctagsPartsDir.listFiles({ f -> f.name.endsWith('.tags') } as FileFilter) ?: []).sort()
+        println "[stags] Building structure index from ${parts.size()} ctags partials (jobs: ${ctagsJobs}) ..."
+
+        def jobs = parts.collect { partFile ->
+            {->
+                def stampFile = new File(stagsStampsDir, partFile.name.replace('.tags', '.stamp'))
+                StagsComp.run(projectRoot, partFile, stagsDir, stampFile)
+            }
+        }
+        def errs = parallel(ctagsJobs, jobs)
+        errs.each { println "[stags] WARN: $it" }
+
+        StagsAll.run(stagsDir)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ltags
+// ---------------------------------------------------------------------------
+task ltags {
+    group       = 'btags'
+    description = 'Generate line-range pivot index from .fns data.'
+    dependsOn ftags
+    outputs.upToDateWhen { false }
+
+    doLast {
+        [ltagsDir, ltagsStampsDir].each { it.mkdirs() }
+        def fnsFiles = (ftagsFnsDir.listFiles({ f -> f.name.endsWith('.fns') } as FileFilter) ?: []).sort()
+        println "[ltags] Building line-range index from ${fnsFiles.size()} .fns files ..."
+
+        def jobs = fnsFiles.collect { fnsFile ->
+            {->
+                def stampFile = new File(ltagsStampsDir, fnsFile.name.replace('.fns', '.stamp'))
+                LtagsComp.run(fnsFile, ltagsDir, stampFile)
+            }
+        }
+        def errs = parallel(ftagsJobs, jobs)
+        errs.each { println "[ltags] WARN: $it" }
+
+        def count = (ltagsDir.listFiles({ f -> f.name.endsWith('.range') } as FileFilter) ?: []).size()
+        println "[ltags] Made Bob-friendly line-range index  ($count source files indexed)"
+    }
+}
+
+// ---------------------------------------------------------------------------
+// xtags
+// ---------------------------------------------------------------------------
+task xtags {
+    group       = 'btags'
+    description = 'Generate callers index from source call-site scanning.'
+    dependsOn ltags
+    outputs.upToDateWhen { false }
+
+    doLast {
+        [xtagsDir, xtagsCallsDir, xtagsStampsDir].each { it.mkdirs() }
+        def fnsFiles = (ftagsFnsDir.listFiles({ f -> f.name.endsWith('.fns') } as FileFilter) ?: []).sort()
+        println "[xtags] Scanning ${fnsFiles.size()} components for call sites ..."
+
+        def jobs = fnsFiles.collect { fnsFile ->
+            {->
+                def stampFile = new File(xtagsStampsDir, fnsFile.name.replace('.fns', '.stamp'))
+                XtagsComp.run(fnsFile, projectRoot, xtagsCallsDir, ltagsDir, stampFile)
+            }
+        }
+        def errs = parallel(ftagsJobs, jobs)
+        errs.each { println "[xtags] WARN: $it" }
+
+        XtagsMerge.run(xtagsCallsDir, xtagsDir, ftagsDir)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// tags — default, builds everything
+// ---------------------------------------------------------------------------
+task tags {
+    group       = 'btags'
+    description = 'Build all btags indexes (ctags + ftags + stags + ltags + xtags).'
+    dependsOn ctags, ftags, stags, ltags, xtags
+    doLast { println "\n🗂️  Bob tag indexes written.\n" }
+}
+
+defaultTasks 'tags'
+
+// ---------------------------------------------------------------------------
+// Clean tasks
+// ---------------------------------------------------------------------------
+task cleanCtags(type: Delete) {
+    group = 'btags'
+    delete ctagsFile, ctagsPartsDir, ctagsStampsDir
+}
+task cleanFtags(type: Delete) {
+    group = 'btags'
+    delete ftagsFnsDir, new File(ftagsDir, 'parts')
+    doLast {
+        ftagsDir.listFiles({ f -> f.name.endsWith('.tsv') } as FileFilter)?.each { it.delete() }
+    }
+}
+task cleanStags(type: Delete) {
+    group = 'btags'
+    delete stagsStampsDir, new File(stagsDir, 'parts')
+    doLast {
+        stagsDir.listFiles({ f -> f.name.endsWith('.tsv') } as FileFilter)?.each { it.delete() }
+    }
+}
+task cleanLtags(type: Delete) {
+    group = 'btags'
+    delete ltagsStampsDir
+    doLast {
+        ltagsDir.listFiles({ f -> f.name.endsWith('.range') } as FileFilter)?.each { it.delete() }
+    }
+}
+task cleanXtags(type: Delete) {
+    group = 'btags'
+    delete xtagsCallsDir, xtagsStampsDir
+    doLast {
+        xtagsDir.listFiles({ f -> f.name.endsWith('.tsv') } as FileFilter)?.each { it.delete() }
+    }
+}
+
+task clean {
+    group = 'btags'
+    description = 'Remove all generated btags output.'
+    dependsOn cleanCtags, cleanFtags, cleanStags, cleanLtags, cleanXtags
+}

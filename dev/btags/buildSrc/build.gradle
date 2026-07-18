@@ -1,0 +1,4 @@
+// buildSrc/build.gradle — compiles the btags Java worker classes
+plugins { id 'java' }
+repositories { mavenCentral() }
+java { sourceCompatibility = JavaVersion.VERSION_11 }

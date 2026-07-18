@@ -35,7 +35,7 @@ ls btags/xtags/l.tsv 2>/dev/null   # xtags present?
 If any file is missing, warn the user **once** then fall back to `grep -rn` for
 the rest of the session — do not repeat the warning:
 
-> ⚠️ **btags indexes are not built.** Run `make tags` (~2 min) from inside
+> ⚠️ **btags indexes are not built.** Run `gradle tags` (~2 min) from inside
 > `btags/`. Falling back to `grep -rn` for this session.
 
 ## Lookup sequence — ftags (methods/functions)

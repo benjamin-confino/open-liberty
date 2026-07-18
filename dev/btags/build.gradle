@@ -2,13 +2,12 @@
 //
 // Cross-platform replacement for GNUmakefile + GNUmakefile.incremental.
 // Pure Java workers (in buildSrc/) — no bash, no awk, no GNU make required.
-// Requires only: Java 11+, Gradle 7+, Universal Ctags on PATH.
+// Requires only: Java 11+, Universal Ctags on PATH.
 //
-// Usage:
-//   cd btags && gradle tags              # build all indexes
-//   cd btags && gradle tags -PbtagsRoot=/other/project
-//   cd btags && gradle ctags             # ctags only
-//   cd btags && gradle clean             # remove all generated output
+// Usage (run from the project root, one level above btags/):
+//   ./gradlew -p btags tags              # build all indexes
+//   ./gradlew -p btags ctags             # ctags only
+//   ./gradlew -p btags clean             # remove all generated output
 //
 // Properties (gradle.properties or -P):
 //   btagsRoot   — project root to index  (default: parent of btags/)

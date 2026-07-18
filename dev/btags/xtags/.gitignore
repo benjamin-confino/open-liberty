@@ -1,0 +1,4 @@
+# xtags/.gitignore — generated index artifacts; scripts are tracked.
+.calls/
+.stamps/
+[_a-z].tsv

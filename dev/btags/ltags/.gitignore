@@ -1,0 +1,3 @@
+# ltags/.gitignore — generated index artifacts; gen_ltags.sh is tracked.
+.stamps/
+*.range

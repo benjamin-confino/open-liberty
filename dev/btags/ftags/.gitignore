@@ -1,0 +1,6 @@
+# ftags/.gitignore — generated index artifacts; scripts are tracked.
+.fns/
+parts/
+hints.tsv
+known_names.tsv
+[_a-z].tsv

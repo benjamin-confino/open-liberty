@@ -1,0 +1,5 @@
+# ctags/.gitignore — generated index artifacts; scripts are tracked.
+.stamps/
+parts/
+tags
+.srccache.mk

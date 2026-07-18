@@ -1,0 +1,4 @@
+# stags/.gitignore — generated index artifacts; scripts are tracked.
+.stamps/
+parts/
+[_a-z].tsv

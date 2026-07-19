@@ -79,14 +79,14 @@ task ctags {
 
     doLast {
         [ctagsPartsDir, ctagsStampsDir].each { it.mkdirs() }
-        def compDirs = SourceDiscovery.findJavaCompDirs(projectRoot)
-        println "[ctags] Scanning ${compDirs.size()} Java components (jobs: ${ctagsJobs}) ..."
+        def components = SourceDiscovery.findJavaComponents(projectRoot)
+        println "[ctags] Scanning ${components.size()} Java components (jobs: ${ctagsJobs}) ..."
 
-        def jobs = compDirs.collect { compPath ->
+        def jobs = components.collect { compPath, srcDir ->
             {->
                 def partFile  = new File(ctagsPartsDir, "java_${new File(compPath).name}.tags")
                 def stampFile = new File(ctagsStampsDir, "java_${new File(compPath).name}.stamp")
-                CtagsPart.run(Util.findCtags(), new File(compPath), partFile, stampFile)
+                CtagsPart.run(Util.findCtags(), srcDir, partFile, stampFile)
             }
         }
         def errs = parallel(ctagsJobs, jobs)
@@ -107,13 +107,11 @@ task ftags {
 
     doLast {
         [ftagsDir, ftagsFnsDir].each { it.mkdirs() }
-        def compDirs = SourceDiscovery.findJavaCompDirs(projectRoot)
-        println "[ftags] Scanning ${compDirs.size()} components (jobs: ${ftagsJobs}) ..."
+        def components = SourceDiscovery.findJavaComponents(projectRoot)
+        println "[ftags] Scanning ${components.size()} components (jobs: ${ftagsJobs}) ..."
 
-        def jobs = compDirs.collect { compPath ->
+        def jobs = components.collect { compPath, srcDir ->
             {->
-                def srcDir  = new File(compPath, 'src')
-                if (!srcDir.isDirectory()) srcDir = new File(compPath)
                 def fnsFile = new File(ftagsFnsDir, "java_${new File(compPath).name}.fns")
                 FtagsComp.run(Util.findCtags(), srcDir, projectRoot, fnsFile)
             }

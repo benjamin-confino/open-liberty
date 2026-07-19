@@ -20,45 +20,31 @@ public final class CtagsPart {
 
     /**
      * @param ctagsBin  absolute path to the Universal Ctags binary
-     * @param compDir   component root (e.g. {@code .../com.ibm.ws.app.manager})
+     * @param srcRoot   resolved Java source root (e.g. {@code .../comp/src} or
+     *                  {@code .../comp/src/main/java}) — provided by the caller,
+     *                  no package-name assumptions made here
      * @param partFile  output partial .tags file
      * @param stampFile stamp file — touched after a successful scan
      */
-    public static void run(String ctagsBin, File compDir, File partFile, File stampFile)
+    public static void run(String ctagsBin, File srcRoot, File partFile, File stampFile)
             throws IOException, InterruptedException {
 
-        // Collect Java source roots in priority order: src/com, src/main/java/com, src/main/java
-        List<File> srcRoots = new ArrayList<>();
-        File srcCom = new File(compDir, "src" + File.separator + "com");
-        if (srcCom.isDirectory()) srcRoots.add(new File(compDir, "src"));
-        File mvnCom = new File(compDir, "src" + File.separator + "main" + File.separator + "java" + File.separator + "com");
-        if (mvnCom.isDirectory()) srcRoots.add(new File(compDir, "src" + File.separator + "main" + File.separator + "java"));
-
-        if (srcRoots.isEmpty()) {
-            // Component has no indexable source — write an empty placeholder
+        if (!srcRoot.isDirectory()) {
+            // Source root does not exist — write an empty placeholder
             partFile.getParentFile().mkdirs();
             if (!partFile.exists()) partFile.createNewFile();
             Util.touchStamp(stampFile);
             return;
         }
 
-        // Check staleness: any .java newer than stamp?
-        boolean stale = !stampFile.exists();
-        if (!stale) {
-            for (File root : srcRoots) {
-                if (Util.isStale(root, JAVA_EXTS, stampFile)) { stale = true; break; }
-            }
-        }
-        if (!stale) return;  // up to date
+        // Incremental check: any .java newer than stamp?
+        if (stampFile.exists() && !Util.isStale(srcRoot, JAVA_EXTS, stampFile)) return;
 
-        // Collect all .java files
-        List<String> sources = new ArrayList<>();
-        for (File root : srcRoots) {
-            Util.findFiles(root, ".java").stream()
-                .map(File::getAbsolutePath)
-                .forEach(sources::add);
-        }
-        sources.sort(Comparator.naturalOrder());
+        // Collect all .java files under the source root
+        List<String> sources = Util.findFiles(srcRoot, ".java").stream()
+            .map(File::getAbsolutePath)
+            .sorted()
+            .collect(Collectors.toList());
 
         partFile.getParentFile().mkdirs();
 
@@ -87,11 +73,10 @@ public final class CtagsPart {
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.redirectErrorStream(true);
             Process p = pb.start();
-            // drain output to avoid blocking
             byte[] out = p.getInputStream().readAllBytes();
             int rc = p.waitFor();
             if (rc != 0) {
-                throw new IOException("ctags exited " + rc + " for " + compDir.getName() +
+                throw new IOException("ctags exited " + rc + " for " + srcRoot +
                     ": " + new String(out).trim());
             }
         } finally {

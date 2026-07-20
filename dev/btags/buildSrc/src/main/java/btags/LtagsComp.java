@@ -11,7 +11,7 @@ import java.util.*;
  * <pre>rel_path TAB start TAB end TAB qualified_name</pre>
  *
  * <p>Entries arrive grouped by rel_path and sorted by start line within each
- * group (the order ftags.sh / ctags produces), so no sort step is needed.
+ * group (the order FtagsComp / ctags produces), so no sort step is needed.
  */
 public final class LtagsComp {
 

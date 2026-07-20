@@ -10,15 +10,15 @@ import java.util.stream.*;
  *
  * <p>A directory under {@code projectRoot} is a component if it contains a
  * Java source root — a sub-directory that itself contains at least one
- * {@code .java} file anywhere beneath it. 
- 
+ * {@code .java} file anywhere beneath it.
+ *
  * <p>No package-name assumptions ({@code com}, {@code io}, {@code org} …) are
  * made; any source root that actually contains {@code .java} files qualifies.
  *
  * <p>The result is a {@link Map} from canonical component-root path to its
- * resolved {@link File} source-root directory. When both layouts are present in
- * the same component, both source roots are included under a single component
- * key (the flat {@code src/} is the canonical root in that case).
+ * resolved {@link File} source-root directory. The candidates in
+ * {@link #SRC_CANDIDATES} are probed in order and the first one containing
+ * {@code .java} files is used — only one source root is recorded per component.
  */
 public final class SourceDiscovery {
 

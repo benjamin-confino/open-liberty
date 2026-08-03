@@ -24,8 +24,21 @@ def projectRoot = project.hasProperty('btagsRoot')
         ? new File(btagsRoot as String).canonicalFile
         : btagsDir.parentFile.canonicalFile
 
-def ctagsJobs = ((project.findProperty('ctagsJobs') ?: '20') as String).toInteger()
-def ftagsJobs = ((project.findProperty('ftagsJobs') ?: '20') as String).toInteger()
+def ctagsJobs      = ((project.findProperty('ctagsJobs')      ?: '20') as String).toInteger()
+def ftagsJobs      = ((project.findProperty('ftagsJobs')      ?: '20') as String).toInteger()
+def onlyComponent  = project.findProperty('onlyComponent') as String  // null = all components
+
+// Filter a component map to only the requested component, if -PonlyComponent was set.
+def filterComponents = { Map<String, File> components ->
+    if (!onlyComponent) return components
+    def filtered = components.findAll { path, _ ->
+        new File(path).name == onlyComponent
+    }
+    if (filtered.isEmpty()) {
+        println "[btags] WARN: onlyComponent='${onlyComponent}' matched no component — no work done."
+    }
+    return filtered
+}
 
 // ---------------------------------------------------------------------------
 // Output directories
@@ -79,7 +92,7 @@ task ctags {
 
     doLast {
         [ctagsPartsDir, ctagsStampsDir].each { it.mkdirs() }
-        def components = SourceDiscovery.findJavaComponents(projectRoot)
+        def components = filterComponents(SourceDiscovery.findJavaComponents(projectRoot))
         println "[ctags] Scanning ${components.size()} Java components (jobs: ${ctagsJobs}) ..."
 
         def jobs = components.collect { compPath, srcDir ->
@@ -107,7 +120,7 @@ task ftags {
 
     doLast {
         [ftagsDir, ftagsFnsDir].each { it.mkdirs() }
-        def components = SourceDiscovery.findJavaComponents(projectRoot)
+        def components = filterComponents(SourceDiscovery.findJavaComponents(projectRoot))
         println "[ftags] Scanning ${components.size()} components (jobs: ${ftagsJobs}) ..."
 
         def jobs = components.collect { compPath, srcDir ->

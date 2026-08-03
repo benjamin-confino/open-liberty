@@ -52,6 +52,7 @@ tracked in git.
 | Action | Command |
 |---|---|
 | Rebuild after code changes | `./gradlew -p btags tags` |
+| Rebuild one component only | `./gradlew -p btags tags -PonlyComponent=com.ibm.ws.cdi.weld` |
 | Rebuild ctags only | `./gradlew -p btags ctags` |
 | Rebuild ftags only | `./gradlew -p btags ftags` |
 | Rebuild stags only | `./gradlew -p btags stags` |
@@ -286,10 +287,11 @@ Run from inside `btags/` (or from anywhere using `-p`):
 ./gradlew -p btags cleanXtags    # remove all .calls files and merged TSVs
 ```
 
-Parallelism can be tuned via Gradle properties:
+Parallelism and component filtering can be tuned via Gradle properties:
 
 ```sh
-./gradlew -p btags tags -PctagsJobs=8 -PftagsJobs=8    # defaults are 20
+./gradlew -p btags tags -PctagsJobs=8 -PftagsJobs=8              # defaults are 20
+./gradlew -p btags tags -PonlyComponent=com.ibm.ws.cdi.weld      # index one component only
 ```
 
 ### Incremental builds

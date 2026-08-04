@@ -65,6 +65,9 @@ def stagsSentinel  = new File(stagsDir, 'a.tsv')
 def ltagsDir       = new File(btagsDir, 'ltags')
 def ltagsStampsDir = new File(ltagsDir, '.stamps')
 
+def mtagsDir       = new File(btagsDir, 'mtags')
+def mtagsFile      = new File(mtagsDir, 'mtags.tsv')
+
 def xtagsDir       = new File(btagsDir, 'xtags')
 def xtagsCallsDir  = new File(xtagsDir, '.calls')
 def xtagsStampsDir = new File(xtagsDir, '.stamps')
@@ -198,6 +201,21 @@ task ltags {
 }
 
 // ---------------------------------------------------------------------------
+// mtags
+// ---------------------------------------------------------------------------
+task mtags {
+    group       = 'btags'
+    description = 'Generate message-code index (CWxxx codes → text + callers) from .nlsprops files.'
+    outputs.upToDateWhen { false }
+
+    doLast {
+        mtagsDir.mkdirs()
+        println "[mtags] Scanning project for .nlsprops files and Tr call sites ..."
+        MtagsComp.run(projectRoot, mtagsFile)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // xtags
 // ---------------------------------------------------------------------------
 task xtags {
@@ -229,8 +247,8 @@ task xtags {
 // ---------------------------------------------------------------------------
 task tags {
     group       = 'btags'
-    description = 'Build all btags indexes (ctags + ftags + stags + ltags + xtags).'
-    dependsOn ctags, ftags, stags, ltags, xtags
+    description = 'Build all btags indexes (ctags + ftags + stags + ltags + xtags + mtags).'
+    dependsOn ctags, ftags, stags, ltags, xtags, mtags
     doLast { println "\n🗂️  Bob tag indexes written.\n" }
 }
 
@@ -271,9 +289,13 @@ task cleanXtags(type: Delete) {
         xtagsDir.listFiles({ f -> f.name.endsWith('.tsv') } as FileFilter)?.each { it.delete() }
     }
 }
+task cleanMtags(type: Delete) {
+    group = 'btags'
+    delete mtagsFile
+}
 
 task clean {
     group = 'btags'
     description = 'Remove all generated btags output.'
-    dependsOn cleanCtags, cleanFtags, cleanStags, cleanLtags, cleanXtags
+    dependsOn cleanCtags, cleanFtags, cleanStags, cleanLtags, cleanXtags, cleanMtags
 }

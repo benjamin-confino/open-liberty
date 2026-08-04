@@ -26,6 +26,7 @@ btags/
       FtagsMerge.java      Assembles component/letter TSVs + hints.tsv
       LtagsComp.java       Pivots ftags .fns into line-range files
       MergeCtags.java      Merges per-component ctags partials
+      MtagsComp.java       Builds message-code index from .nlsprops + Tr call sites
       SourceDiscovery.java Finds Java component source roots
       StagsComp.java       Builds structure tags for one component
       StagsAll.java        Assembles the flat cross-component stags index
@@ -39,6 +40,7 @@ btags/
   ftags/                   Function Tags — methods with exact line ranges
   stags/                   Structure Tags — classes, enums, interfaces, fields
   ltags/                   Line-range index — pivoted from ftags for xtags lookups
+  mtags/                   Message-code index — CWxxx codes → text + callers
   xtags/                   Callers index — which methods call a given method
   README.md                You are here
 ```
@@ -57,10 +59,12 @@ tracked in git.
 | Rebuild ftags only | `./gradlew -p btags ftags` |
 | Rebuild stags only | `./gradlew -p btags stags` |
 | Rebuild ltags only | `./gradlew -p btags ltags` |
+| Rebuild mtags only | `./gradlew -p btags mtags` |
 | Rebuild xtags only | `./gradlew -p btags xtags` |
 | Full clean rebuild | `./gradlew -p btags clean tags` |
 | Clean ctags output only | `./gradlew -p btags cleanCtags` |
 | Clean ftags output only | `./gradlew -p btags cleanFtags` |
+| Clean mtags output only | `./gradlew -p btags cleanMtags` |
 | Clean xtags output only | `./gradlew -p btags cleanXtags` |
 
 All tasks run with `outputs.upToDateWhen { false }` so they always execute, but
@@ -91,6 +95,7 @@ open it, scroll it" workflows across large files.
 | Find a method body | Whole-repo text search, noisy matches, then manual scan for the method end | Look up `ftags/<letter>.tsv`, then read only the exact `start-end` lines | <span style="white-space: nowrap;"><code>validate</code>: <span style="color:#b42318; font-weight:600;">36.5 s</span> → <span style="color:#17603a; font-weight:600;">23.6 ms</span> (<strong>~1,546× faster, ~98% fewer tokens</strong>)</span> |
 | Find a class / enum / field declaration | Whole-repo text search across source files | Look up `stags/<letter>.tsv` for the declaration line | <span style="white-space: nowrap;"><code>Anchor</code>: <span style="color:#b42318; font-weight:600;">36.5 s</span> → <span style="color:#17603a; font-weight:600;">40.7 ms</span> (<strong>~897× faster, ~99% fewer tokens</strong>)</span> |
 | Find callers of a method | Whole-repo text search for call text, then inspect hits manually | Look up `xtags/<letter>.tsv` for direct call sites | <span style="white-space: nowrap;"><code>validate</code> callers: <span style="color:#b42318; font-weight:600;">36.5 s</span> → <span style="color:#17603a; font-weight:600;">43.0 ms</span> (<strong>~849× faster, ~99% fewer tokens</strong>)</span> |
+| Look up a log message code (e.g. `CWWKS0008I`) | Whole-repo grep across all `.nlsprops` files, then grep again for `Tr.*` call sites | Look up `mtags/mtags.tsv` — one row contains the text, explanation, useraction, and all callers | Instant single `grep` vs. multi-pass source scan |
 | Reduce tokens and context | Open large files and scan manually | Read only the exact method range or declaration line returned by the index | <span style="color:#17603a; font-weight:600;">Read only the returned lines</span> instead of loading whole files (<strong>~98–99% fewer tokens</strong>) |
 
 ---
@@ -263,6 +268,67 @@ grep '^processOrder' btags/xtags/p.tsv || true
 
 ---
 
+### mtags — Message Code index
+
+**Location:** `mtags/mtags.tsv`
+
+Maps every `CWxxx`-style log/message code defined in the repository's
+`.nlsprops` files to its English text, user-facing explanation, user action,
+definition source, and Java call sites.  A single `grep` replaces the usual
+multi-step workflow of (1) finding the `.nlsprops` file, (2) reading the
+message text and metadata, and (3) grepping the source tree for
+`Tr.info/warning/error` calls.
+
+#### Format — 7-column TSV
+
+```
+msg_code<TAB>msg_key<TAB>msg_text<TAB>explanation<TAB>useraction<TAB>nlsprops_file<TAB>java_callers
+```
+
+```
+CWWKS0008I  SECURITY_SERVICE_READY  The security service is ready.
+            This message is for informational purposes only.  No action is required.
+            build.pii.package/nlssrc/.../SecurityReadyServiceMessages.nlsprops
+            com.ibm.ws.security.ready.service/src/.../SecurityReadyServiceImpl.java:223
+```
+
+- `msg_code` — e.g. `CWWKS0008I` (sorted; the primary key)
+- `msg_key` — the NLS property key, e.g. `SECURITY_SERVICE_READY`
+- `msg_text` — English message text (without the code prefix and ": ")
+- `explanation` — `.explanation` value from the nlsprops file, or `-`
+- `useraction` — `.useraction` value from the nlsprops file, or `-`
+- `nlsprops_file` — relative path to the English `.nlsprops` definition
+- `java_callers` — semicolon-separated `file:line` list of `Tr.info/warning/error/fatal/audit` call sites, or `-`
+
+#### Lookup recipe
+
+```sh
+# Code seen in a log
+grep '^CWWKS0008I' btags/mtags/mtags.tsv
+
+# All codes in a prefix group
+grep '^CWWKS' btags/mtags/mtags.tsv | head -20
+
+# Search by message key
+grep $'\tSECURITY_SERVICE_READY\t' btags/mtags/mtags.tsv || true
+
+# Free-text search in the message body
+grep -i 'security service is ready' btags/mtags/mtags.tsv || true
+```
+
+#### How mtags is built
+
+`MtagsComp` performs a single pass over all English `.nlsprops` files under
+`projectRoot` (excluding `build/` output), parsing the message code embedded
+at the start of each message value (e.g. `CWWKS0008I: …`).  It then scans
+every `.java` source file for `Tr.info`, `Tr.warning`, `Tr.error`,
+`Tr.fatal`, and `Tr.audit` calls that reference a known message key by
+string literal.  Both passes are done in one JVM invocation — no ctags
+dependency, no stamp file — so `mtags` can run standalone and takes roughly
+10 seconds on this repo.
+
+---
+
 ## Building
 
 To install btags into another project, follow [`INSTALL.md`](INSTALL.md) or ask
@@ -278,12 +344,14 @@ Run from inside `btags/` (or from anywhere using `-p`):
 ./gradlew -p btags ftags         # ftags only  (incremental — only changed components re-processed)
 ./gradlew -p btags stags         # stags only  (reads ctags output — fast)
 ./gradlew -p btags ltags         # ltags only  (reads ftags .fns files)
+./gradlew -p btags mtags         # mtags only  (walks .nlsprops + Java sources — fast, ~10 s)
 ./gradlew -p btags xtags         # xtags only  (reads ftags .fns + ltags .range files)
 ./gradlew -p btags clean         # wipe everything
 ./gradlew -p btags cleanCtags    # wipe ctags output for a full ctags rebuild
 ./gradlew -p btags cleanFtags    # wipe ftags stamps and output for a full ftags rebuild
 ./gradlew -p btags cleanStags    # wipe stags output folders
 ./gradlew -p btags cleanLtags    # remove all .range files
+./gradlew -p btags cleanMtags    # remove mtags.tsv
 ./gradlew -p btags cleanXtags    # remove all .calls files and merged TSVs
 ```
 
@@ -303,6 +371,7 @@ them, but the Java workers perform their own incremental staleness checks:
 2. `FtagsComp` — skips a component if no `.java` is newer than its `.fns` file.
 3. `StagsComp` — skips a component if no `.java` is newer than its stags stamp.
 4. `LtagsComp` / `XtagsComp` — skip if the `.fns` file is not newer than the stamp.
+5. `MtagsComp` — always does a full walk (no stamp; the `.nlsprops` scan is fast, ~10 s).
 
 A typical one-file edit triggers a rescan of one component in all five stages
 and completes in **under 30 seconds** on a 10-core machine.

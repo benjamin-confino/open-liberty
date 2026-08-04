@@ -1,7 +1,7 @@
 # INSTALL — Adding btags to a project
 
 Step-by-step guide to add the btags index suite (ctags, ftags, stags, ltags,
-xtags) to any Java project.
+mtags, xtags) to any Java project.
 
 btags supports two installation modes — choose whichever suits your workflow:
 
@@ -67,6 +67,7 @@ your-project/
     │       ├── FtagsMerge.java   ← assembles component/letter TSVs + hints.tsv
     │       ├── LtagsComp.java    ← pivots ftags .fns into line-range files
     │       ├── MergeCtags.java   ← merges per-component ctags partials
+    │       ├── MtagsComp.java    ← builds message-code index from .nlsprops + Tr call sites
     │       ├── SourceDiscovery.java ← finds Java component source roots
     │       ├── StagsComp.java    ← builds structure tags for one component
     │       ├── StagsAll.java     ← assembles the flat cross-component stags index
@@ -78,6 +79,7 @@ your-project/
     │       └── search-rules.md   ← Bob index rules (copy to ~/bob/rules/ — see A5)
     ├── ctags/                    ← Universal Ctags output
     ├── ftags/                    ← Function Tags output
+    ├── mtags/                    ← Message-code index output
     ├── stags/                    ← Structure Tags output
     ├── ltags/                    ← Line-range index output
     └── xtags/                    ← Callers index output
@@ -110,6 +112,7 @@ project's `.gitignore` are needed.**
 |---|---|
 | `btags/ctags/` | `.stamps/`, `parts/`, `tags`, `.srccache.mk` |
 | `btags/ftags/` | `.fns/`, `parts/`, `hints.tsv`, `known_names.tsv`, `[_a-z].tsv` |
+| `btags/mtags/` | `mtags.tsv` |
 | `btags/stags/` | `.stamps/`, `parts/`, `[_a-z].tsv` |
 | `btags/ltags/` | `.stamps/`, `*.range` |
 | `btags/xtags/` | `.calls/`, `.stamps/`, `[_a-z].tsv` |
@@ -211,6 +214,8 @@ whenever you pull a new version of btags.
 [stags] Created Bob-specific type/struct/enum lookup index  (NNN,NNN entries)
 [ltags] Building line-range index from N .fns files ...
 [ltags] Made Bob-friendly line-range index  (NNNN source files indexed)
+[mtags] Scanning project for .nlsprops files and Tr call sites ...
+[mtags] Indexed N,NNN message codes from NNN nlsprops files
 [xtags] Scanning N components for call sites ...
 [xtags] Mapped Bob-friendly call-site lookup index  (NNN,NNN call graph links)
 ```
@@ -226,6 +231,9 @@ grep '^OrderService' btags/stags/o.tsv
 
 # Find all callers of a method
 grep '^processOrder' btags/xtags/p.tsv
+
+# Look up a message code seen in a log
+grep '^CWWKS0008I' btags/mtags/mtags.tsv
 ```
 
 ---
@@ -237,12 +245,14 @@ grep '^processOrder' btags/xtags/p.tsv
 | Rebuild after code changes | `./gradlew -p btags tags` |
 | Rebuild ctags only | `./gradlew -p btags ctags` |
 | Rebuild ftags only | `./gradlew -p btags ftags` |
+| Rebuild mtags only | `./gradlew -p btags mtags` |
 | Rebuild stags only | `./gradlew -p btags stags` |
 | Rebuild ltags only | `./gradlew -p btags ltags` |
 | Rebuild xtags only | `./gradlew -p btags xtags` |
 | Full clean rebuild | `./gradlew -p btags clean tags` |
 | Clean ctags output only | `./gradlew -p btags cleanCtags` |
 | Clean ftags output only | `./gradlew -p btags cleanFtags` |
+| Clean mtags output only | `./gradlew -p btags cleanMtags` |
 | Clean xtags output only | `./gradlew -p btags cleanXtags` |
 
 All tasks run with `outputs.upToDateWhen { false }` so they always execute, but

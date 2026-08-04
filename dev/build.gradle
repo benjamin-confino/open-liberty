@@ -53,3 +53,78 @@ apply from: 'wlp-gradle/biz.aQute.bnd.gradle'
 tasks.named('wrapper') {
   jarFile = rootProject.file('.gradle-wrapper/gradle-wrapper.jar')
 }
+
+/**
+ * After a local assemble (i.e. !isAutomatedBuild), rebuild the btags indexes so
+ * that Bob's code-navigation indexes stay current.
+ *
+ * Rules:
+ *  - Runs exactly once per Gradle invocation (updateBtags is registered as a
+ *    finalizer at configuration time and de-duplicated by Gradle).
+ *  - Skipped entirely on automated/CI builds (isAutomatedBuild == true).
+ *  - Passes -PforComponent=<comma-separated names> when fewer than 20 bnd
+ *    component projects actually executed their assemble task, to limit indexing
+ *    to those components. When 20 or more ran, indexes the entire workspace.
+ */
+if (!isAutomatedBuild) {
+    // Infrastructure projects always added to the graph that are not indexable
+    // bnd component projects.
+    def infraProjects = [
+        'ant_build.js', 'build.image', 'com.ibm.websphere.appserver.features',
+        'wlp-bndPlugins', 'wlp-rasInstrumentation', 'wlp-jakartaee-transform',
+        'wlp-updatePom', 'cnf'
+    ] as Set
+
+    def gradlew = rootProject.file(
+        System.properties['os.name']?.toLowerCase()?.contains('windows') ? 'gradlew.bat' : 'gradlew'
+    ).canonicalPath
+
+    // Accumulates the names of component projects whose assemble task actually ran.
+    // Populated by the TaskExecutionListener below at execution time.
+    def executedComponents = new java.util.concurrent.CopyOnWriteArrayList<String>()
+
+    tasks.register('updateBtags') {
+        group       = 'btags'
+        description = 'Rebuild btags indexes after a local assemble.'
+        doLast {
+        
+            def components = executedComponents.unique()
+            List<String> cmd = [gradlew, '-p', rootProject.file('btags').canonicalPath, 'tags']
+            if (components.size() < 20) {
+                cmd.add("-PforComponent=${components.join(',')}" as String)
+                println "[btags] Updating tag indexes for ${components.size()} component(s): ${components.join(', ')}"
+            } else {
+                println "[btags] Updating tag indexes for all components (${components.size()} assembled)"
+            }
+            println cmd
+            new ProcessBuilder(cmd)
+                .directory(rootProject.projectDir)
+                .inheritIO()
+                .start()
+                .waitFor()
+        }
+    }
+
+    // At configuration time, register updateBtags as a finalizer on every bnd
+    // component's assemble task. Gradle deduplicates finalizers so updateBtags
+    // runs exactly once regardless of how many assemble tasks are in the graph.
+    subprojects {
+        if (!infraProjects.contains(project.name)) {
+            tasks.named('assemble') {
+                finalizedBy rootProject.tasks.named('updateBtags')
+            }
+        }
+    }
+
+    // Track which component assemble tasks actually executed (not UP-TO-DATE/skipped).
+    gradle.addListener(new TaskExecutionListener() {
+        void beforeExecute(Task task) {}
+        void afterExecute(Task task, TaskState state) {
+            if (task.name == 'assemble'
+                    && !infraProjects.contains(task.project.name)
+                    && state.executed && !state.skipped) {
+                executedComponents.add(task.project.name)
+            }
+        }
+    })
+}

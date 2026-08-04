@@ -26,16 +26,22 @@ def projectRoot = project.hasProperty('btagsRoot')
 
 def ctagsJobs      = ((project.findProperty('ctagsJobs')      ?: '20') as String).toInteger()
 def ftagsJobs      = ((project.findProperty('ftagsJobs')      ?: '20') as String).toInteger()
-def onlyComponent  = project.findProperty('onlyComponent') as String  // null = all components
+def forComponent  = project.findProperty('forComponent') as String  // null = all components
 
-// Filter a component map to only the requested component, if -PonlyComponent was set.
+// Filter a component map to only the requested components, if -PforComponent was set.
+// Accepts a single name or a comma-separated list of names.
 def filterComponents = { Map<String, File> components ->
-    if (!onlyComponent) return components
+    if (!forComponent) return components
+    def requested = forComponent.split(',').collect { it.trim() }.toSet()
     def filtered = components.findAll { path, _ ->
-        new File(path).name == onlyComponent
+        requested.contains(new File(path).name)
+    }
+    def matched = filtered.keySet().collect { new File(it).name }.toSet()
+    (requested - matched).each { name ->
+        println "[btags] WARN: forComponent='${name}' matched no component — skipped."
     }
     if (filtered.isEmpty()) {
-        println "[btags] WARN: onlyComponent='${onlyComponent}' matched no component — no work done."
+        println "[btags] WARN: no requested components matched — no work done."
     }
     return filtered
 }

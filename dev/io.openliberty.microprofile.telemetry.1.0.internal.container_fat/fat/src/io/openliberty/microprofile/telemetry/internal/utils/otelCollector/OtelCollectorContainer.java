@@ -17,6 +17,7 @@ import java.time.Duration;
 
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
@@ -45,7 +46,7 @@ public class OtelCollectorContainer extends GenericContainer<OtelCollectorContai
      * Wait on the collector's own startup log message instead, which is emitted
      * only after all receivers (including the gRPC OTLP receiver) are listening.
      */
-    private static final LogMessageWaitStrategy READY_WAIT_STRATEGY =
+    private static final WaitStrategy READY_WAIT_STRATEGY =
         new LogMessageWaitStrategy()
             .withRegEx(".*Everything is ready\\..*")
             .withStartupTimeout(Duration.ofSeconds(60));

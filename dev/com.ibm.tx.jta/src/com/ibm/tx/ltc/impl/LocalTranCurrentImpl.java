@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2023 IBM Corporation and others.
+ * Copyright (c) 2009, 2026 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -178,8 +178,14 @@ public class LocalTranCurrentImpl {
 
         final LocalTranCoordImpl ltc = _coord;
         if (ltc != null) {
-            _coord = null;
-            ltc.suspend(); // suspend any native context
+            // Take the LTC off this thread and mark it suspended as a single atomic
+            // step with respect to resume(), which locks the same monitor. Otherwise
+            // another thread could see the LTC as still running on this thread after
+            // _coord has been cleared, and wrongly ignore its resume.
+            synchronized (ltc) {
+                _coord = null;
+                ltc.suspend(); // suspend any native context
+            }
 
             invokeEventListener(ltc, UOWEventListener.SUSPEND, null);
         }
@@ -220,11 +226,26 @@ public class LocalTranCurrentImpl {
             throw ise;
         }
 
-        _coord = (LocalTranCoordImpl) ltc;
-        if (_coord != null) {
-            _coord.resume(this); // resume any native context
+        final LocalTranCoordImpl coord = (LocalTranCoordImpl) ltc;
 
-            invokeEventListener(_coord, UOWEventListener.RESUME, null);
+        if (coord != null) {
+            // Resume any native context and associate the LTC with this thread as a
+            // single atomic step with respect to suspend() and other resumes, which
+            // lock the same monitor. If the LTC is already running on another thread
+            // this does nothing (and traces) rather than activating the LTC on two
+            // threads at once.
+            synchronized (coord) {
+                if (!coord.resume(this)) {
+                    if (tc.isEntryEnabled())
+                        Tr.exit(tc, "resume", "ignored");
+                    return;
+                }
+                _coord = coord;
+            }
+
+            invokeEventListener(coord, UOWEventListener.RESUME, null);
+        } else {
+            _coord = null;
         }
 
         if (tc.isEntryEnabled())

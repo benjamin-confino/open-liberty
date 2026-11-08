@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2023 IBM Corporation and others.
+ * Copyright (c) 2009, 2026 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -1199,7 +1199,7 @@ public class LocalTranCoordImpl implements LocalTransactionCoordinator, UOWCoord
     }
 
     // Suspend any native context off the thread
-    protected void suspend() {
+    protected synchronized void suspend() {
 
         _current = null;
         _state = Suspended;
@@ -1208,14 +1208,28 @@ public class LocalTranCoordImpl implements LocalTransactionCoordinator, UOWCoord
             Tr.debug(tc, "suspend");
     }
 
-    // Resume any native context onto the thread
-    protected void resume(LocalTranCurrentImpl current) {
+    // Resume any native context onto the thread.
+    //
+    // This is synchronized so that the check for the LTC already being active on
+    // another thread and the update of _current/_state are atomic. Otherwise two
+    // threads could both observe the LTC as suspended and both resume it.
+    //
+    // Returns true if the LTC is now associated with 'current'. Returns false,
+    // changing nothing, if the LTC is already running on a different thread.
+    protected synchronized boolean resume(LocalTranCurrentImpl current) {
+
+        if (_state == Running && _current != null && _current != current) {
+            if (tc.isDebugEnabled())
+                Tr.debug(tc, "resume: LTC is already running on another thread ({0}); resume on {1} ignored", _current, current);
+            return false;
+        }
 
         _current = current;
         _state = Running;
 
         if (tc.isDebugEnabled())
             Tr.debug(tc, "resume: {0}", current);
+        return true;
     }
 
     /*
